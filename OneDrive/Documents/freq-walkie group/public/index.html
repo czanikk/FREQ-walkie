@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FREQ — Group Radio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --panel: #0d1117;
+    --border: #1a2332;
+    --accent: #00ff88;
+    --accent2: #00ccff;
+    --warn: #ff4444;
+    --text: #c8d8e8;
+    --dim: #445566;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px 32px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px var(--accent), 0 0 40px rgba(0,255,136,0.3);
+    animation: flicker 8s infinite;
+  }
+
+  @keyframes flicker {
+    0%,95%,100% { opacity:1; }
+    96% { opacity:0.85; }
+    97% { opacity:1; }
+    98% { opacity:0.9; }
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--dim);
+    transition: all 0.3s;
+  }
+  .status-dot.connected { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse-dot 2s infinite; }
+  .status-dot.connecting { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); animation: blink 0.8s infinite; }
+  .status-dot.error { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+
+  @keyframes pulse-dot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:0.7} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .status-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    display: flex; align-items: center; gap: 6px;
+    transition: color 0.3s;
+  }
+  .status-label.connected { color: var(--accent); }
+  .status-label.connecting { color: var(--accent2); }
+  .status-label.error { color: var(--warn); }
+
+  .freq-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .freq-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+
+  .freq-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .freq-display {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 36px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,255,136,0.5);
+    letter-spacing: 4px;
+    margin-bottom: 16px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+
+  .freq-display .cursor {
+    display: inline-block;
+    width: 3px; height: 36px;
+    background: var(--accent);
+    margin-left: 4px;
+    animation: cursor-blink 1s infinite;
+  }
+
+  @keyframes cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+  .freq-input-row { display: flex; gap: 8px; }
+
+  .freq-input {
+    flex: 1;
+    background: #080d14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    padding: 10px 14px;
+    outline: none;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .freq-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,255,136,0.15), inset 0 0 20px rgba(0,255,136,0.05);
+  }
+  .freq-input::placeholder { color: var(--dim); letter-spacing: 2px; }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn:hover, .btn:active { background: rgba(0,255,136,0.1); box-shadow: 0 0 12px rgba(0,255,136,0.2); }
+  .btn.btn-secondary { border-color: var(--border); color: var(--dim); }
+  .btn.btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); background: rgba(0,204,255,0.05); }
+  .btn.btn-danger { border-color: var(--warn); color: var(--warn); }
+  .btn.btn-danger:hover { background: rgba(255,68,68,0.1); box-shadow: 0 0 12px rgba(255,68,68,0.2); }
+
+  /* ── Peers Panel ── */
+  .peers-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .peers-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .peers-label span { color: var(--accent2); }
+
+  .peers-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 28px;
+  }
+
+  .peer-chip {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 5px;
+    transition: all 0.3s;
+  }
+
+  .peer-chip.connected { border-color: rgba(0,255,136,0.3); color: var(--accent); }
+  .peer-chip.connecting { border-color: rgba(0,204,255,0.3); color: var(--accent2); animation: blink 1s infinite; }
+  .peer-chip.speaking { border-color: var(--accent2); background: rgba(0,204,255,0.08); color: var(--accent2); }
+
+  .peer-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+  .peers-empty {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    opacity: 0.5;
+  }
+
+  .visualizer-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .vis-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .vis-mode { color: var(--accent2); font-size: 9px; }
+
+  canvas#waveform {
+    width: 100%;
+    height: 80px;
+    display: block;
+    border-radius: 6px;
+    background: #060810;
+  }
+
+  .signal-bars { display: flex; gap: 3px; align-items: flex-end; height: 20px; }
+  .signal-bar { width: 5px; background: var(--border); border-radius: 2px; transition: background 0.2s; }
+  .signal-bar.active { background: var(--accent); }
+  .signal-bar:nth-child(1) { height: 5px; }
+  .signal-bar:nth-child(2) { height: 9px; }
+  .signal-bar:nth-child(3) { height: 13px; }
+  .signal-bar:nth-child(4) { height: 17px; }
+  .signal-bar:nth-child(5) { height: 20px; }
+
+  /* ── Talk Button ── */
+  .talk-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 16px 0 20px;
+  }
+
+  .talk-btn {
+    width: 100%;
+    padding: 28px 0;
+    border-radius: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    background: #0d1117;
+    color: var(--dim);
+    transition: all 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    outline: none;
+  }
+
+  .talk-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .talk-btn:not(:disabled):hover { border-color: var(--accent); color: var(--accent); background: rgba(0,255,136,0.04); }
+
+  .talk-btn.talking {
+    background: rgba(0,255,136,0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(0,255,136,0.15), 0 0 40px rgba(0,255,136,0.2);
+    animation: talk-pulse 1.2s infinite;
+  }
+
+  @keyframes talk-pulse {
+    0%,100% { box-shadow: 0 0 0 4px rgba(0,255,136,0.15), 0 0 40px rgba(0,255,136,0.2); }
+    50%      { box-shadow: 0 0 0 8px rgba(0,255,136,0.08), 0 0 60px rgba(0,255,136,0.35); }
+  }
+
+  .talk-btn-icon { font-size: 36px; line-height: 1; }
+  .talk-btn-text { font-size: 22px; letter-spacing: 6px; }
+  .talk-btn-sub { font-size: 10px; letter-spacing: 3px; opacity: 0.5; color: var(--dim); }
+  .talk-btn.talking .talk-btn-sub { color: var(--accent); opacity: 0.7; }
+
+  .info-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .info-tabs { display: flex; border-bottom: 1px solid var(--border); }
+
+  .info-tab {
+    flex: 1;
+    padding: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-align: center;
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    border: none;
+    background: transparent;
+  }
+
+  .info-tab.active { color: var(--accent); background: rgba(0,255,136,0.05); border-bottom: 1px solid var(--accent); margin-bottom: -1px; }
+
+  .info-body { padding: 14px; min-height: 100px; max-height: 160px; overflow-y: auto; }
+
+  .log-line {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    gap: 8px;
+  }
+
+  .log-line .ts { color: #334455; min-width: 60px; }
+  .log-line.ok .msg { color: var(--accent); }
+  .log-line.err .msg { color: var(--warn); }
+  .log-line.info .msg { color: var(--accent2); }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-item { background: #080d14; border-radius: 8px; padding: 10px 12px; }
+  .stat-item-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--dim); letter-spacing: 2px; margin-bottom: 4px; text-transform: uppercase; }
+  .stat-item-value { font-family: 'Share Tech Mono', monospace; font-size: 16px; color: var(--text); }
+  .stat-item-value.good { color: var(--accent); }
+  .stat-item-value.warn { color: #ffaa00; }
+  .stat-item-value.bad  { color: var(--warn); }
+
+  .controls-row { display: flex; gap: 8px; margin-top: auto; padding-top: 12px; }
+
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(6,8,16,0.92);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; backdrop-filter: blur(4px);
+    animation: fade-in 0.2s ease;
+  }
+  .modal-bg.hidden { display: none; }
+  @keyframes fade-in { from{opacity:0} to{opacity:1} }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 100%; max-width: 360px;
+    position: relative;
+    animation: slide-up 0.25s ease;
+  }
+  @keyframes slide-up { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .modal h2 { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: var(--accent2); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--dim); line-height: 1.6; margin-bottom: 20px; }
+  .modal p strong { color: var(--text); }
+  .modal-btns { display: flex; gap: 8px; flex-direction: column; }
+
+  .toast {
+    position: fixed; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    background: #0d1a2e;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    padding: 10px 20px; border-radius: 40px;
+    z-index: 200; white-space: nowrap;
+    box-shadow: 0 0 20px rgba(0,204,255,0.2);
+    animation: toast-in 0.3s ease, toast-out 0.3s ease 2.5s forwards;
+    pointer-events: none;
+  }
+  @keyframes toast-in { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+  @keyframes toast-out { from{opacity:1} to{opacity:0} }
+
+  .server-url-banner {
+    background: rgba(0,204,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--dim);
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 6px;
+    word-break: break-all;
+  }
+  .server-url-banner .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .server-url-banner .dot.green { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .server-url-banner .dot.red { background: var(--warn); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .noise {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 999; opacity: 0.02;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<div class="modal-bg" id="setupModal">
+  <div class="modal">
+    <h2>// FREQ GROUP INIT</h2>
+    <p>
+      Real-time <strong>WebRTC group radio</strong> — up to ~6 people per channel.<br><br>
+      Everyone joins the <strong>same frequency code</strong> to connect.<br><br>
+      Microphone access required.
+    </p>
+    <div class="modal-btns">
+      <button class="btn" id="startBtn">⚡ INITIALIZE RADIO</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="logo">FREQ</div>
+    <div class="status-label" id="statusLabel">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">OFFLINE</span>
+    </div>
+  </div>
+
+  <div class="server-url-banner">
+    <div class="dot red" id="wsDot"></div>
+    <span id="wsStatus">SIGNAL SERVER: CONNECTING...</span>
+  </div>
+
+  <div class="freq-panel">
+    <div class="freq-label">// CHANNEL FREQUENCY</div>
+    <div class="freq-display">
+      <span id="freqValue">---.---</span>
+      <span class="cursor" id="freqCursor"></span>
+    </div>
+    <div class="freq-input-row">
+      <input class="freq-input" id="freqInput" type="text"
+             placeholder="ENTER CODE" maxlength="8"
+             autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="btn" id="tuneBtn">TUNE</button>
+    </div>
+    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:2px;">
+        ON CHANNEL: <span id="peerCount" style="color:var(--accent2)">0</span>
+      </span>
+      <button class="btn btn-secondary" id="genFreqBtn" style="font-size:10px;padding:6px 12px;">🎲 RANDOM</button>
+    </div>
+  </div>
+
+  <!-- Group Peers Panel -->
+  <div class="peers-panel">
+    <div class="peers-label">
+      // ACTIVE PEERS <span id="connectedCount">0 LINKED</span>
+    </div>
+    <div class="peers-list" id="peersList">
+      <span class="peers-empty">NO PEERS — TUNE TO A CHANNEL</span>
+    </div>
+  </div>
+
+  <div class="visualizer-wrap">
+    <div class="vis-label">
+      <span>// SIGNAL MONITOR</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="signal-bars">
+          <div class="signal-bar" id="sb1"></div>
+          <div class="signal-bar" id="sb2"></div>
+          <div class="signal-bar" id="sb3"></div>
+          <div class="signal-bar" id="sb4"></div>
+          <div class="signal-bar" id="sb5"></div>
+        </div>
+        <span class="vis-mode" id="visMode">IDLE</span>
+      </div>
+    </div>
+    <canvas id="waveform" width="800" height="160"></canvas>
+  </div>
+
+  <div class="talk-wrap">
+    <button class="talk-btn" id="talkBtn" disabled>
+      <span class="talk-btn-icon" id="talkIcon">📡</span>
+      <span class="talk-btn-text" id="talkText">TALK</span>
+      <span class="talk-btn-sub" id="talkSub">TUNE TO A FREQUENCY FIRST</span>
+    </button>
+  </div>
+
+  <div class="info-panel">
+    <div class="info-tabs">
+      <button class="info-tab active" onclick="switchTab('log')">LOG</button>
+      <button class="info-tab" onclick="switchTab('stats')">STATS</button>
+      <button class="info-tab" onclick="switchTab('help')">HELP</button>
+    </div>
+    <div class="info-body" id="tabLog">
+      <div class="log-line info"><span class="ts">BOOT</span><span class="msg">FREQ GROUP RADIO v3.0 — MESH P2P</span></div>
+    </div>
+    <div class="info-body" id="tabStats" style="display:none">
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-item-label">PEERS LINKED</div>
+          <div class="stat-item-value" id="statPeers">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-label">TX COUNT</div>
+          <div class="stat-item-value" id="statTx">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-label">MY ID</div>
+          <div class="stat-item-value" id="statId" style="font-size:11px">--</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-item-label">UPTIME</div>
+          <div class="stat-item-value" id="statUptime">00:00</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-body" id="tabHelp" style="display:none">
+      <div class="log-line"><span class="ts">①</span><span class="msg" style="color:var(--text)">Open ngrok URL on all devices</span></div>
+      <div class="log-line"><span class="ts">②</span><span class="msg" style="color:var(--text)">Tap INITIALIZE RADIO, allow mic</span></div>
+      <div class="log-line"><span class="ts">③</span><span class="msg" style="color:var(--text)">Enter SAME frequency on everyone's device</span></div>
+      <div class="log-line"><span class="ts">④</span><span class="msg" style="color:var(--text)">Wait for peers to appear above</span></div>
+      <div class="log-line"><span class="ts">⑤</span><span class="msg" style="color:var(--text)">Tap TALK to broadcast to everyone</span></div>
+      <div class="log-line"><span class="ts">⑥</span><span class="msg" style="color:var(--text)">Desktop: hold SPACEBAR to talk</span></div>
+      <div class="log-line"><span class="ts">⚠</span><span class="msg" style="color:#ffaa00">Best with 2–6 people (full mesh)</span></div>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <button class="btn btn-danger" id="disconnectBtn" style="flex:1" disabled>DISCONNECT</button>
+    <button class="btn btn-secondary" id="muteBtn" style="flex:1">🔊 SPEAKER</button>
+  </div>
+</div>
+
+<!-- Audio elements created dynamically per peer -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  FREQ v3.0 — Full Mesh Group Radio
+// ═══════════════════════════════════════════════════════
+
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:global.stun.twilio.com:3478" },
+];
+
+const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_URL = `${wsProtocol}//${location.host}`;
+
+// ── State ──
+let myId        = Math.random().toString(36).slice(2, 10);
+let frequency   = "";
+let ws          = null;
+let wsConnected = false;
+
+// MESH: one RTCPeerConnection per remote peer
+// peerConns: Map<peerId, { pc: RTCPeerConnection, audioEl: HTMLAudioElement, analyser: AnalyserNode|null, state: string }>
+const peerConns = new Map();
+
+let localStream    = null;
+let txStream       = null;
+let gainNode       = null;
+let audioCtx       = null;
+let analyserLocal  = null;
+let isMuted        = false;
+let isTransmitting = false;
+let txCount        = 0;
+let startTime      = null;
+let uptimeInterval = null;
+
+const $ = id => document.getElementById(id);
+
+const talkBtn   = $('talkBtn');
+const talkIcon  = $('talkIcon');
+const talkText  = $('talkText');
+const talkSub   = $('talkSub');
+const freqInput = $('freqInput');
+const visMode   = $('visMode');
+const canvas    = $('waveform');
+const ctx2d     = canvas.getContext('2d');
+
+// ── Helpers ──
+function log(msg, type='') {
+  const logEl = $('tabLog');
+  const now = new Date();
+  const ts = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const line = document.createElement('div');
+  line.className = `log-line ${type}`;
+  line.innerHTML = `<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+  while (logEl.children.length > 100) logEl.removeChild(logEl.firstChild);
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function setStatus(state, text) {
+  $('statusDot').className = `status-dot ${state}`;
+  $('statusLabel').className = `status-label ${state}`;
+  $('statusText').textContent = text;
+}
+
+function switchTab(tab) {
+  ['log','stats','help'].forEach(t => {
+    $(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('.info-tab').forEach((el,i) =>
+    el.classList.toggle('active', ['log','stats','help'][i] === tab)
+  );
+}
+
+$('genFreqBtn').onclick = () => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let f = '';
+  for (let i = 0; i < 6; i++) f += chars[Math.floor(Math.random() * chars.length)];
+  freqInput.value = f;
+};
+
+freqInput.addEventListener('input', () => {
+  freqInput.value = freqInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+});
+
+// ── Peers UI ──
+function updatePeersUI() {
+  const list = $('peersList');
+  const connectedCount = $('connectedCount');
+  let linked = 0;
+  list.innerHTML = '';
+
+  if (peerConns.size === 0) {
+    list.innerHTML = '<span class="peers-empty">NO PEERS YET</span>';
+    connectedCount.textContent = '0 LINKED';
+    $('statPeers').textContent = '0';
+    updateTalkButtonState();
+    return;
+  }
+
+  peerConns.forEach((info, peerId) => {
+    const chip = document.createElement('div');
+    const shortId = peerId.slice(0, 6).toUpperCase();
+    let cls = 'peer-chip';
+    let dot = '●';
+    if (info.state === 'connected') { cls += ' connected'; linked++; }
+    else if (info.state === 'connecting') cls += ' connecting';
+    else if (info.state === 'speaking') { cls += ' speaking'; linked++; }
+    chip.className = cls;
+    chip.innerHTML = `<div class="peer-dot"></div>${shortId}`;
+    chip.title = peerId;
+    list.appendChild(chip);
+  });
+
+  connectedCount.textContent = `${linked} LINKED`;
+  $('statPeers').textContent = linked;
+  updateTalkButtonState();
+}
+
+function updateTalkButtonState() {
+  // Can talk if at least one peer is connected
+  let hasConnected = false;
+  peerConns.forEach(info => {
+    if (info.state === 'connected' || info.state === 'speaking') hasConnected = true;
+  });
+  talkBtn.disabled = !hasConnected;
+  if (!hasConnected && frequency) {
+    talkSub.textContent = 'WAITING FOR PEERS...';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  WEBSOCKET
+// ═══════════════════════════════════════════
+
+function connectWebSocket() {
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+  log(`WS → ${WS_URL}`, 'info');
+  $('wsStatus').textContent = 'SIGNAL SERVER: CONNECTING...';
+  $('wsDot').className = 'dot';
+
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    wsConnected = true;
+    log('WS CONNECTED', 'ok');
+    $('wsStatus').textContent = 'SIGNAL SERVER: CONNECTED';
+    $('wsDot').className = 'dot green';
+    if (ws._ping) clearInterval(ws._ping);
+    ws._ping = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) wsSend({ type: 'ping' });
+    }, 8000);
+    if (frequency) wsSend({ type: 'join', frequency, peerId: myId });
+  };
+
+  ws.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch(err) { return; }
+    handleWsMessage(msg);
+  };
+
+  ws.onclose = () => {
+    wsConnected = false;
+    $('wsDot').className = 'dot red';
+    $('wsStatus').textContent = 'SIGNAL SERVER: DISCONNECTED';
+    log('WS DISCONNECTED — retrying...', 'err');
+    if (ws._ping) clearInterval(ws._ping);
+    setTimeout(connectWebSocket, 3000);
+  };
+
+  ws.onerror = () => { log('WS ERROR', 'err'); };
+}
+
+function wsSend(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+
+function handleWsMessage(msg) {
+  switch(msg.type) {
+
+    case 'joined':
+      log(`CHANNEL: ${msg.frequency} | ${msg.peerCount} ON FREQ`, 'ok');
+      $('peerCount').textContent = msg.peerCount;
+      // Connect to every existing peer (we initiate as caller)
+      if (msg.existingPeers && msg.existingPeers.length > 0) {
+        msg.existingPeers.forEach(peerId => {
+          log(`CALLING → ${peerId.slice(0,6)}`, 'info');
+          createPeerConnection(peerId, true); // true = we initiate
+        });
+      } else {
+        setStatus('connecting', 'WAITING');
+        talkSub.textContent = 'WAITING FOR PEERS...';
+      }
+      break;
+
+    case 'peer-joined':
+      log(`+ PEER JOINED: ${msg.peerId.slice(0,6)}`, 'info');
+      $('peerCount').textContent = msg.peerCount;
+      // New peer joined — they will call us, so just register as callee
+      // Actually we register a "pending" slot; the offer will come in
+      if (!peerConns.has(msg.peerId)) {
+        registerPeerSlot(msg.peerId);
+      }
+      break;
+
+    case 'peer-left':
+      log(`- PEER LEFT: ${msg.peerId.slice(0,6)}`, 'err');
+      $('peerCount').textContent = msg.peerCount;
+      removePeer(msg.peerId);
+      break;
+
+    case 'offer':
+      log(`RX OFFER ← ${msg.fromId.slice(0,6)}`, 'info');
+      handleOffer(msg);
+      break;
+
+    case 'answer':
+      log(`RX ANSWER ← ${msg.fromId.slice(0,6)}`, 'ok');
+      handleAnswer(msg);
+      break;
+
+    case 'candidate':
+      handleCandidate(msg);
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  MESH PEER CONNECTION MANAGEMENT
+// ═══════════════════════════════════════════
+
+function registerPeerSlot(peerId) {
+  if (peerConns.has(peerId)) return;
+  peerConns.set(peerId, { pc: null, audioEl: null, analyser: null, state: 'connecting' });
+  updatePeersUI();
+}
+
+function createPeerConnection(peerId, isInitiator) {
+  // Clean up existing if any
+  if (peerConns.has(peerId)) {
+    const old = peerConns.get(peerId);
+    if (old.pc) old.pc.close();
+    if (old.audioEl) old.audioEl.remove();
+  }
+
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+  // Create dedicated audio element for this peer
+  const audioEl = document.createElement('audio');
+  audioEl.autoplay = true;
+  audioEl.setAttribute('playsinline', '');
+  audioEl.volume = isMuted ? 0 : 1;
+  document.body.appendChild(audioEl);
+
+  const peerInfo = { pc, audioEl, analyser: null, state: 'connecting' };
+  peerConns.set(peerId, peerInfo);
+  updatePeersUI();
+
+  // Add our TX audio track to this connection
+  if (txStream) {
+    txStream.getTracks().forEach(track => pc.addTrack(track, txStream));
+  }
+
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      wsSend({ type: 'candidate', candidate: e.candidate, targetId: peerId });
+    }
+  };
+
+  pc.ontrack = (e) => {
+    log(`RX AUDIO ← ${peerId.slice(0,6)}`, 'ok');
+    audioEl.srcObject = e.streams[0];
+    if (audioCtx) {
+      peerInfo.analyser = audioCtx.createAnalyser();
+      peerInfo.analyser.fftSize = 512;
+      const src = audioCtx.createMediaStreamSource(e.streams[0]);
+      src.connect(peerInfo.analyser);
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    const state = pc.connectionState;
+    log(`PEER ${peerId.slice(0,6)}: ${state.toUpperCase()}`, state === 'connected' ? 'ok' : state === 'failed' ? 'err' : '');
+
+    if (state === 'connected') {
+      peerInfo.state = 'connected';
+      if (!startTime) { startTime = Date.now(); startUptimeCounter(); }
+      toast(`🔗 ${peerId.slice(0,6).toUpperCase()} LINKED`);
+    } else if (state === 'failed' || state === 'disconnected' || state === 'closed') {
+      peerInfo.state = 'disconnected';
+      // Try ICE restart after a brief delay
+      if (state === 'failed') {
+        setTimeout(() => {
+          if (peerConns.has(peerId) && peerConns.get(peerId).state !== 'connected') {
+            log(`RETRYING → ${peerId.slice(0,6)}`, 'info');
+            createPeerConnection(peerId, isInitiator);
+            if (isInitiator) initiateOffer(peerId);
+          }
+        }, 2000);
+      }
+    }
+
+    updatePeersUI();
+
+    // Update overall status
+    let anyConnected = false;
+    peerConns.forEach(info => { if (info.state === 'connected') anyConnected = true; });
+    if (anyConnected) {
+      setStatus('connected', `LINKED (${countConnected()})`);
+      talkBtn.disabled = false;
+      talkSub.textContent = 'TAP TO BROADCAST TO ALL';
+      $('disconnectBtn').disabled = false;
+    } else if (frequency) {
+      setStatus('connecting', 'WAITING');
+    }
+  };
+
+  // If we're the initiator, create and send offer
+  if (isInitiator) {
+    initiateOffer(peerId);
+  }
+
+  return pc;
+}
+
+async function initiateOffer(peerId) {
+  const info = peerConns.get(peerId);
+  if (!info || !info.pc) return;
+  try {
+    const offer = await info.pc.createOffer({ offerToReceiveAudio: true });
+    await info.pc.setLocalDescription(offer);
+    wsSend({ type: 'offer', sdp: offer.sdp, targetId: peerId });
+  } catch(e) { log(`OFFER ERR: ${e.message}`, 'err'); }
+}
+
+async function handleOffer(msg) {
+  const peerId = msg.fromId;
+
+  // Create connection for this peer if not exists (callee side)
+  let info = peerConns.get(peerId);
+  if (!info || !info.pc) {
+    createPeerConnection(peerId, false);
+    info = peerConns.get(peerId);
+  }
+
+  try {
+    await info.pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: msg.sdp }));
+    const answer = await info.pc.createAnswer();
+    await info.pc.setLocalDescription(answer);
+    wsSend({ type: 'answer', sdp: answer.sdp, targetId: peerId });
+  } catch(e) { log(`ANSWER ERR: ${e.message}`, 'err'); }
+}
+
+async function handleAnswer(msg) {
+  const info = peerConns.get(msg.fromId);
+  if (!info || !info.pc) return;
+  try {
+    if (info.pc.signalingState !== 'stable') {
+      await info.pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: msg.sdp }));
+    }
+  } catch(e) { log(`DESC ERR: ${e.message}`, 'err'); }
+}
+
+async function handleCandidate(msg) {
+  const info = peerConns.get(msg.fromId);
+  if (!info || !info.pc) return;
+  try {
+    if (msg.candidate) await info.pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+  } catch(e) {}
+}
+
+function removePeer(peerId) {
+  const info = peerConns.get(peerId);
+  if (info) {
+    if (info.pc) info.pc.close();
+    if (info.audioEl) info.audioEl.remove();
+  }
+  peerConns.delete(peerId);
+  updatePeersUI();
+
+  let anyConnected = false;
+  peerConns.forEach(i => { if (i.state === 'connected') anyConnected = true; });
+  if (!anyConnected && frequency) {
+    setStatus('connecting', 'WAITING');
+    talkBtn.disabled = true;
+    talkSub.textContent = 'WAITING FOR PEERS...';
+  }
+}
+
+function countConnected() {
+  let n = 0;
+  peerConns.forEach(i => { if (i.state === 'connected') n++; });
+  return n;
+}
+
+function closeAllPeers() {
+  peerConns.forEach((info, peerId) => {
+    if (info.pc) info.pc.close();
+    if (info.audioEl) info.audioEl.remove();
+  });
+  peerConns.clear();
+  updatePeersUI();
+}
+
+// ═══════════════════════════════════════════
+//  AUDIO SETUP
+// ═══════════════════════════════════════════
+
+async function setupAudio() {
+  localStream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    video: false,
+  });
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const localSource = audioCtx.createMediaStreamSource(localStream);
+
+  gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0; // PTT gate
+
+  analyserLocal = audioCtx.createAnalyser();
+  analyserLocal.fftSize = 512;
+
+  localSource.connect(gainNode);
+  localSource.connect(analyserLocal);
+
+  const dest = audioCtx.createMediaStreamDestination();
+  gainNode.connect(dest);
+  txStream = dest.stream;
+
+  $('statId').textContent = myId.slice(0,6).toUpperCase();
+  log(`MIC READY | ID: ${myId.slice(0,6)}`, 'ok');
+}
+
+// ═══════════════════════════════════════════
+//  TRANSMIT
+// ═══════════════════════════════════════════
+
+function startTransmit() {
+  if (talkBtn.disabled || isTransmitting) return;
+  if (countConnected() === 0) { toast('NO PEERS LINKED'); return; }
+
+  isTransmitting = true;
+
+  const enable = () => { if (gainNode) gainNode.gain.setValueAtTime(1, audioCtx.currentTime); };
+  if (audioCtx) audioCtx.resume().then(enable).catch(enable);
+
+  talkBtn.classList.add('talking');
+  talkIcon.textContent = '🔴';
+  talkText.textContent = 'TALKING';
+  talkSub.textContent = `BROADCASTING TO ${countConnected()} PEER${countConnected()>1?'S':''}`;
+  visMode.textContent = 'TX';
+  visMode.style.color = 'var(--accent)';
+  txCount++;
+  $('statTx').textContent = txCount;
+  log(`▶ TX → ${countConnected()} PEERS`, 'ok');
+}
+
+function stopTransmit() {
+  if (!isTransmitting) return;
+  isTransmitting = false;
+
+  if (gainNode && audioCtx) gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+
+  talkBtn.classList.remove('talking');
+  talkIcon.textContent = '📡';
+  talkText.textContent = 'TALK';
+  talkSub.textContent = 'TAP TO BROADCAST TO ALL';
+  visMode.textContent = 'STANDBY';
+  visMode.style.color = 'var(--dim)';
+  log('■ TX STOP', '');
+}
+
+// Single click/tap toggle
+talkBtn.addEventListener('click', () => {
+  if (talkBtn.disabled) return;
+  if (audioCtx) audioCtx.resume();
+  isTransmitting ? stopTransmit() : startTransmit();
+});
+
+// Spacebar hold to talk
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !e.repeat && document.activeElement !== freqInput) {
+    e.preventDefault();
+    if (audioCtx) audioCtx.resume();
+    startTransmit();
+  }
+});
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); stopTransmit(); }
+});
+
+// ═══════════════════════════════════════════
+//  FREQUENCY / CONTROLS
+// ═══════════════════════════════════════════
+
+function tuneToFrequency(freq) {
+  freq = freq.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  if (freq.length < 3) { toast('TOO SHORT'); return; }
+
+  if (frequency) {
+    wsSend({ type: 'leave' });
+    closeAllPeers();
+  }
+
+  frequency = freq;
+  $('freqValue').textContent = freq;
+  $('freqCursor').style.display = 'none';
+  setStatus('connecting', 'TUNING');
+  talkSub.textContent = 'JOINING CHANNEL...';
+  log(`TUNED → ${freq}`, 'info');
+  wsSend({ type: 'join', frequency: freq, peerId: myId });
+}
+
+$('tuneBtn').onclick = () => {
+  const val = freqInput.value.trim();
+  if (val) tuneToFrequency(val);
+};
+
+freqInput.addEventListener('keydown', e => { if (e.key === 'Enter') $('tuneBtn').click(); });
+
+function fullDisconnect() {
+  stopTransmit();
+  wsSend({ type: 'leave' });
+  closeAllPeers();
+  frequency = '';
+  $('freqValue').textContent = '---.---';
+  $('freqCursor').style.display = '';
+  $('peerCount').textContent = '0';
+  talkBtn.disabled = true;
+  talkIcon.textContent = '📡';
+  talkText.textContent = 'TALK';
+  talkSub.textContent = 'TUNE TO A FREQUENCY FIRST';
+  $('disconnectBtn').disabled = true;
+  setStatus('', 'OFFLINE');
+  if (uptimeInterval) clearInterval(uptimeInterval);
+  startTime = null;
+  log('DISCONNECTED', 'err');
+}
+
+$('disconnectBtn').onclick = fullDisconnect;
+
+$('muteBtn').onclick = function() {
+  isMuted = !isMuted;
+  peerConns.forEach(info => { if (info.audioEl) info.audioEl.volume = isMuted ? 0 : 1; });
+  this.textContent = isMuted ? '🔇 MUTED' : '🔊 SPEAKER';
+  this.style.color = isMuted ? 'var(--warn)' : '';
+  toast(isMuted ? 'SPEAKER MUTED' : 'SPEAKER ON');
+};
+
+// ═══════════════════════════════════════════
+//  VISUALIZER
+// ═══════════════════════════════════════════
+
+function startUptimeCounter() {
+  if (uptimeInterval) clearInterval(uptimeInterval);
+  uptimeInterval = setInterval(() => {
+    if (!startTime) return;
+    const secs = Math.floor((Date.now() - startTime) / 1000);
+    $('statUptime').textContent = `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function updateSignalBars(level) {
+  ['sb1','sb2','sb3','sb4','sb5'].forEach((id, i) =>
+    $(id).classList.toggle('active', i < Math.round(level * 5))
+  );
+}
+
+function drawWaveform() {
+  requestAnimationFrame(drawWaveform);
+  const W = canvas.width, H = canvas.height;
+  ctx2d.fillStyle = '#060810';
+  ctx2d.fillRect(0, 0, W, H);
+
+  let data, color, glow;
+
+  if (isTransmitting && analyserLocal) {
+    data = new Uint8Array(analyserLocal.frequencyBinCount);
+    analyserLocal.getByteTimeDomainData(data);
+    color = '#00ff88'; glow = 'rgba(0,255,136,0.4)';
+  } else {
+    // Mix all incoming peer audio levels (use first active analyser for waveform display)
+    let activeAnalyser = null;
+    let totalLevel = 0;
+    peerConns.forEach(info => {
+      if (info.analyser) {
+        const tmp = new Uint8Array(info.analyser.frequencyBinCount);
+        info.analyser.getByteTimeDomainData(tmp);
+        let sum = 0;
+        tmp.forEach(v => sum += Math.abs(v - 128));
+        const lvl = sum / tmp.length;
+        totalLevel += lvl;
+        if (lvl > 2 && !activeAnalyser) activeAnalyser = info.analyser;
+      }
+    });
+
+    if (activeAnalyser) {
+      data = new Uint8Array(activeAnalyser.frequencyBinCount);
+      activeAnalyser.getByteTimeDomainData(data);
+      visMode.textContent = 'RX';
+      visMode.style.color = 'var(--accent2)';
+    } else {
+      data = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) data[i] = 128 + (Math.random()-0.5)*2;
+      if (!isTransmitting) {
+        visMode.textContent = frequency ? 'STANDBY' : 'IDLE';
+        visMode.style.color = 'var(--dim)';
+      }
+    }
+    color = '#00ccff'; glow = 'rgba(0,204,255,0.4)';
+    updateSignalBars(Math.min(totalLevel / 20, 1));
+  }
+
+  const sw = W / data.length;
+  ctx2d.save();
+  ctx2d.shadowBlur = 12;
+  ctx2d.shadowColor = glow;
+  ctx2d.strokeStyle = color;
+  ctx2d.lineWidth = 2;
+  ctx2d.beginPath();
+  for (let i = 0; i < data.length; i++) {
+    const y = (data[i]/128) * H/2;
+    i === 0 ? ctx2d.moveTo(0, y) : ctx2d.lineTo(i*sw, y);
+  }
+  ctx2d.stroke();
+  ctx2d.restore();
+
+  ctx2d.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx2d.lineWidth = 1;
+  ctx2d.beginPath();
+  ctx2d.moveTo(0, H/2); ctx2d.lineTo(W, H/2);
+  ctx2d.stroke();
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+$('startBtn').onclick = async () => {
+  $('setupModal').classList.add('hidden');
+  try {
+    await setupAudio();
+    setStatus('', 'READY');
+    drawWaveform();
+    connectWebSocket();
+    toast('RADIO INITIALIZED');
+  } catch(e) {
+    log(`MIC ERROR: ${e.message}`, 'err');
+    toast('MICROPHONE ACCESS DENIED');
+    $('setupModal').classList.remove('hidden');
+  }
+};
+
+window.addEventListener('beforeunload', () => {
+  stopTransmit();
+  if (ws && ws.readyState === WebSocket.OPEN) { wsSend({ type: 'leave' }); ws.close(); }
+  closeAllPeers();
+  if (localStream) localStream.getTracks().forEach(t => t.stop());
+});
+
+// Wake lock
+(async () => {
+  try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e) {}
+})();
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e) {}
+  }
+});
+</script>
+</body>
+</html>
