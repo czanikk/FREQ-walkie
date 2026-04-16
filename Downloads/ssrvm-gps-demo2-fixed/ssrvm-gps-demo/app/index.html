@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="theme-color" content="#0a0a18"/>
+<title>SSRVM GPS</title>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="/css/app.css"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1 — LOGIN
+══════════════════════════════════════════ -->
+<div id="scr-login" class="screen active">
+  <div class="login-bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="login-body">
+    <div class="login-logo">
+      <div class="logo-bus-wrap">
+        <svg width="76" height="42" viewBox="0 0 80 44" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="6" width="70" height="28" rx="5" fill="#f97316"/>
+          <rect x="2" y="6" width="70" height="12" rx="4" fill="#fb923c"/>
+          <rect x="56" y="6" width="16" height="28" rx="3" fill="#ea6c00"/>
+          <rect x="6"  y="10" width="13" height="8" rx="2" fill="#bae6fd" opacity=".92"/>
+          <rect x="23" y="10" width="13" height="8" rx="2" fill="#bae6fd" opacity=".92"/>
+          <rect x="40" y="10" width="12" height="8" rx="2" fill="#bae6fd" opacity=".92"/>
+          <rect x="58" y="10" width="12" height="8" rx="2" fill="#bae6fd" opacity=".92"/>
+          <circle cx="17" cy="37" r="5" fill="#1e293b"/>
+          <circle cx="17" cy="37" r="3" fill="#64748b"/>
+          <circle cx="58" cy="37" r="5" fill="#1e293b"/>
+          <circle cx="58" cy="37" r="3" fill="#64748b"/>
+          <rect x="2"  y="22" width="5" height="6" rx="1" fill="#fde047"/>
+          <rect x="69" y="22" width="5" height="6" rx="1" fill="#f97316" opacity=".8"/>
+          <text x="16" y="22" font-size="8" font-weight="900" fill="#7c2d12" font-family="Arial,sans-serif">SSRVM</text>
+        </svg>
+      </div>
+      <h1>SSRVM GPS</h1>
+      <p id="login-branch">Agartala Branch</p>
+    </div>
+
+    <div class="login-card">
+      <h2>Sign In</h2>
+      <p class="login-hint">Use credentials provided by school</p>
+
+      <div class="field">
+        <label>Username</label>
+        <div class="field-box">
+          <svg class="f-ico" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z" fill="currentColor"/>
+          </svg>
+          <input id="inp-user" type="text" placeholder="Username" autocapitalize="none" autocomplete="username"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <div class="field-box">
+          <svg class="f-ico" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M18 8h-1V6A5 5 0 007 6v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-6 9a2 2 0 110-4 2 2 0 010 4zm3-9H9V6a3 3 0 016 0v2z" fill="currentColor"/>
+          </svg>
+          <input id="inp-pass" type="password" placeholder="Password" autocomplete="current-password"/>
+          <button class="eye-btn" onclick="toggleEye()">
+            <svg id="eye-svg" viewBox="0 0 24 24" width="18" height="18">
+              <path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5C21.3 7.6 17 4.5 12 4.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="login-err" class="login-err" style="display:none"></div>
+
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">
+        <span id="btn-txt">Sign In</span>
+        <span id="btn-spin" class="spinner" style="display:none"></span>
+      </button>
+
+      <div class="login-footer">🌹 Jai Gurudev 🌹</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2 — BUS LIST
+══════════════════════════════════════════ -->
+<div id="scr-list" class="screen">
+
+  <div class="appbar">
+    <div class="ab-left">
+      <svg width="38" height="20" viewBox="0 0 80 44">
+        <rect x="2" y="6" width="70" height="28" rx="5" fill="#f97316"/>
+        <rect x="2" y="6" width="70" height="12" rx="4" fill="#fb923c"/>
+        <rect x="56" y="6" width="16" height="28" rx="3" fill="#ea6c00"/>
+        <circle cx="17" cy="37" r="5" fill="#1e293b"/>
+        <circle cx="17" cy="37" r="3" fill="#64748b"/>
+        <circle cx="58" cy="37" r="5" fill="#1e293b"/>
+        <circle cx="58" cy="37" r="3" fill="#64748b"/>
+      </svg>
+      <div>
+        <div class="ab-title" id="list-title">SSRVM GPS</div>
+        <div class="ab-sub"   id="list-sub">Connecting…</div>
+      </div>
+    </div>
+    <div class="ab-right">
+      <button class="ab-ico-btn" id="notif-btn" onclick="requestNotifPermission()" title="Enable alerts">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5c0-3.1-1.6-5.6-4.5-6.3V4a1.5 1.5 0 00-3 0v.7C7.6 5.4 6 7.9 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="live-chip" id="list-chip">◌ Live</div>
+      <button class="ab-ico-btn" onclick="doLogout()" title="Logout">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M17 7l-1.4 1.4L18.2 11H8v2h10.2l-2.6 2.6L17 17l5-5-5-5zM4 5h8V3H4a2 2 0 00-2 2v14a2 2 0 002 2h8v-2H4V5z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24" width="16" height="16" class="search-ico">
+      <path d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <input id="search-inp" type="search" placeholder="Search bus number or route…" oninput="filterBuses()"/>
+    <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none">✕</button>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat active-s"><span id="cnt-active">0</span><span>Moving</span></div>
+    <div class="stat-sep"></div>
+    <div class="stat stopped-s"><span id="cnt-stopped">0</span><span>Stopped</span></div>
+    <div class="stat-sep"></div>
+    <div class="stat offline-s"><span id="cnt-offline">0</span><span>Offline</span></div>
+    <div class="stat-sep"></div>
+    <div class="stat total-s"><span id="cnt-total">0</span><span>Total</span></div>
+  </div>
+
+  <div class="bus-list" id="bus-list">
+    <div class="list-loading">
+      <div class="spinner lg-spin"></div>
+      <p>Loading buses…</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 3 — TRACKING
+══════════════════════════════════════════ -->
+<div id="scr-track" class="screen">
+
+  <div class="appbar appbar-track">
+    <button class="back-btn" onclick="goBack()">
+      <svg viewBox="0 0 24 24" width="22" height="22">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div class="ab-center">
+      <div class="ab-title" id="trk-title">Bus —</div>
+      <div class="ab-sub"   id="trk-sub">—</div>
+    </div>
+    <div class="trk-badge" id="trk-badge">—</div>
+  </div>
+
+  <div class="info-strip">
+    <div class="istrip-item">
+      <div class="istrip-val" id="is-speed">—</div>
+      <div class="istrip-lbl">km/h</div>
+    </div>
+    <div class="istrip-sep"></div>
+    <div class="istrip-item">
+      <div class="istrip-val" id="is-eta">—</div>
+      <div class="istrip-lbl">min to school</div>
+    </div>
+    <div class="istrip-sep"></div>
+    <div class="istrip-item">
+      <div class="istrip-val" id="is-dist">—</div>
+      <div class="istrip-lbl">km away</div>
+    </div>
+    <div class="istrip-sep"></div>
+    <div class="istrip-item">
+      <div class="istrip-val small-val" id="is-time">—</div>
+      <div class="istrip-lbl">updated</div>
+    </div>
+  </div>
+
+  <div class="layer-toggle">
+    <button class="layer-btn active" id="lbtn-map" onclick="setLayer('map')">🗺 Map</button>
+    <button class="layer-btn" id="lbtn-sat" onclick="setLayer('sat')">🛰 Satellite</button>
+  </div>
+
+  <div id="track-map"></div>
+
+  <div class="map-fabs">
+    <button class="fab fab-active" id="fab-follow" onclick="toggleFollow()" title="Follow bus">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="currentColor"/>
+      </svg>
+    </button>
+    <button class="fab" id="fab-myloc" onclick="showMyLocation()" title="My location">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <path d="M12 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm8.9 3A9 9 0 0013 3.1V1h-2v2.1A9 9 0 003.1 11H1v2h2.1A9 9 0 0011 20.9V23h2v-2.1A9 9 0 0020.9 13H23v-2h-2.1zM12 19a7 7 0 110-14 7 7 0 010 14z" fill="currentColor"/>
+      </svg>
+    </button>
+    <button class="fab" id="fab-school" onclick="centerSchool()" title="School">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <path d="M5 13.2V17h14v-3.8L12 9 5 13.2zM12 3L1 9l11 6 9-4.9V17h2V9L12 3z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="geo-banner" id="geo-banner" style="display:none">
+    <div class="geo-icon">🔔</div>
+    <div class="geo-text" id="geo-text">Bus approaching!</div>
+    <button class="geo-close" onclick="dismissGeo()">✕</button>
+  </div>
+
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-tabs">
+      <button class="bstab active" onclick="switchTab(this,'info')">📋 Info</button>
+      <button class="bstab" onclick="switchTab(this,'driver')">👨‍✈️ Driver</button>
+      <button class="bstab" onclick="switchTab(this,'route')">🗺 Route</button>
+      <button class="bstab" onclick="switchTab(this,'stats')">📊 Stats</button>
+    </div>
+
+    <div class="bpanel active" id="bp-info">
+      <div class="info-grid">
+        <div class="ig-item"><div class="ig-lbl">Bus Number</div><div class="ig-val accent" id="ig-num">—</div></div>
+        <div class="ig-item"><div class="ig-lbl">Status</div><div class="ig-val" id="ig-status">—</div></div>
+        <div class="ig-item"><div class="ig-lbl">Speed</div><div class="ig-val" id="ig-speed">—</div></div>
+        <div class="ig-item"><div class="ig-lbl">Distance</div><div class="ig-val" id="ig-dist">—</div></div>
+      </div>
+    </div>
+
+    <div class="bpanel" id="bp-driver">
+      <div class="driver-row">
+        <div class="driver-ava">
+          <svg viewBox="0 0 24 24" width="34" height="34">
+            <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="driver-det">
+          <div class="driver-nm" id="dr-name">—</div>
+          <div class="driver-rl">Bus Driver · SSRVM Agartala</div>
+          <div class="driver-ph" id="dr-phone">—</div>
+        </div>
+        <a class="call-fab" id="dr-call" href="#">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="currentColor"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="bpanel" id="bp-route">
+      <div class="route-panel">
+        <div class="rp-name" id="rp-name">—</div>
+        <div class="rp-tag">🚌 SSRVM · Agartala Branch</div>
+        <div class="rp-note" id="rp-note">Route details will be updated once school provides actual stop information.</div>
+        <div class="rp-live"><span class="rp-dot"></span><span id="rp-pts">— points recorded</span></div>
+      </div>
+    </div>
+
+    <div class="bpanel" id="bp-stats">
+      <div class="stats-panel">
+        <div class="sp-row">
+          <div class="sp-item"><div class="sp-val" id="sp-pts">—</div><div class="sp-lbl">GPS points</div></div>
+          <div class="sp-item"><div class="sp-val orange" id="sp-max">—</div><div class="sp-lbl">Max speed</div></div>
+          <div class="sp-item"><div class="sp-val green" id="sp-avg">—</div><div class="sp-lbl">Avg speed</div></div>
+        </div>
+        <div class="sp-legend">
+          <div class="sp-leg-item"><span class="leg-sq green-sq"></span>Moving</div>
+          <div class="sp-leg-item"><span class="leg-sq yellow-sq"></span>Stopped</div>
+          <div class="sp-leg-item"><span class="leg-sq red-sq"></span>Offline</div>
+        </div>
+        <button class="btn-secondary" onclick="toggleTrail()">Toggle Trail Visibility</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<audio id="alert-audio" preload="auto">
+  <source src="/alert.wav" type="audio/wav"/>
+</audio>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════
+let MAP_CFG = { lat: 23.8315, lng: 91.2868, zoom: 13, busZoom: 15 };
+const SCHOOL = { lat: 23.8103, lng: 91.2661 };
+
+const TILES = {
+  map: {
+    url:  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  },
+  sat: {
+    url:  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: '© Esri, Maxar, Earthstar Geographics',
+  },
+};
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let TOKEN         = localStorage.getItem('ssrvm_token') || null;
+let allBuses      = [];
+let listSSE       = null;
+let trackSSE      = null;
+let map           = null;
+let tileLayer     = null;
+let currentLayer  = 'map';
+let busMarker     = null;
+let busTrail      = null;
+let myLocMarker   = null;
+let myLocCircle   = null;
+let myLocWatcher  = null;
+let followMode    = true;
+let trailVisible  = true;
+let interpTgt     = null;
+let interpCur     = null;
+let animFr        = null;
+let currentBusId  = null;
+let geoDismissed  = false;
+let maxSpd        = 0;
+let spdHistory    = [];
+let notifGranted  = false;
+let geoBannerShown = false;
+
+// ══════════════════════════════════════════════════════════
+//  SCREENS
+// ══════════════════════════════════════════════════════════
+const SCR = {
+  login: document.getElementById('scr-login'),
+  list:  document.getElementById('scr-list'),
+  track: document.getElementById('scr-track'),
+};
+
+function show(name) {
+  Object.values(SCR).forEach(s => s.classList.remove('active'));
+  SCR[name].classList.add('active');
+  if (name === 'track') history.pushState({ s: 'track' }, '');
+}
+
+window.addEventListener('popstate', () => {
+  if (SCR.track.classList.contains('active')) goBack();
+});
+
+// ══════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
+  document.getElementById('inp-pass')
+    .addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('inp-user')
+    .addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('inp-pass').focus();
+    });
+
+  checkNotifPermission();
+
+  if (TOKEN) {
+    show('list');
+    loadSchoolInfo();
+    startListSSE();
+  } else {
+    show('login');
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════
+async function doLogin() {
+  const u = document.getElementById('inp-user').value.trim();
+  const p = document.getElementById('inp-pass').value;
+  document.getElementById('login-err').style.display = 'none';
+
+  if (!u || !p) { loginErr('Please enter username and password'); return; }
+
+  setLoginLoading(true);
+  try {
+    const r = await fetch('/api/login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username: u, password: p }),
+    });
+    const d = await r.json();
+
+    if (!d.success) { loginErr(d.message || 'Login failed'); return; }
+
+    TOKEN = d.token;
+    localStorage.setItem('ssrvm_token', TOKEN);
+
+    if (d.mapConfig) {
+      MAP_CFG = {
+        lat:     d.mapConfig.DEFAULT_LAT  || MAP_CFG.lat,
+        lng:     d.mapConfig.DEFAULT_LNG  || MAP_CFG.lng,
+        zoom:    d.mapConfig.DEFAULT_ZOOM || MAP_CFG.zoom,
+        busZoom: d.mapConfig.BUS_ZOOM     || MAP_CFG.busZoom,
+      };
+    }
+
+    if (d.school) {
+      document.getElementById('list-title').textContent = `${d.school.SHORT || 'SSRVM'} GPS`;
+      document.getElementById('login-branch').textContent = `${d.school.BRANCH || ''} Branch`;
+    }
+
+    show('list');
+    loadSchoolInfo();
+    startListSSE();
+    requestNotifPermission();
+  } catch {
+    loginErr('Cannot connect. Check your internet.');
+  } finally {
+    setLoginLoading(false);
+  }
+}
+
+function doLogout() {
+  TOKEN = null;
+  localStorage.removeItem('ssrvm_token');
+  closeSSE(listSSE);  listSSE  = null;
+  closeSSE(trackSSE); trackSSE = null;
+  stopMyLocation();
+  destroyMap();
+  show('login');
+  document.getElementById('inp-user').value = '';
+  document.getElementById('inp-pass').value = '';
+}
+
+function toggleEye() {
+  const inp = document.getElementById('inp-pass');
+  inp.type  = inp.type === 'password' ? 'text' : 'password';
+}
+
+function setLoginLoading(on) {
+  document.getElementById('btn-login').disabled = on;
+  document.getElementById('btn-txt').style.display  = on ? 'none' : '';
+  document.getElementById('btn-spin').style.display = on ? ''     : 'none';
+}
+
+function loginErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent   = msg;
+  el.style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════════
+//  SCHOOL INFO
+// ══════════════════════════════════════════════════════════
+async function loadSchoolInfo() {
+  try {
+    const r = await fetch('/api/school', { headers: { Authorization: `Bearer ${TOKEN}` } });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('list-title').textContent = `${d.school.SHORT} GPS`;
+      if (d.mapConfig) {
+        MAP_CFG.lat     = d.mapConfig.DEFAULT_LAT;
+        MAP_CFG.lng     = d.mapConfig.DEFAULT_LNG;
+        MAP_CFG.zoom    = d.mapConfig.DEFAULT_ZOOM;
+        MAP_CFG.busZoom = d.mapConfig.BUS_ZOOM;
+      }
+    }
+  } catch {}
+}
+
+// ══════════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ══════════════════════════════════════════════════════════
+function checkNotifPermission() {
+  if (!('Notification' in window)) return;
+  notifGranted = Notification.permission === 'granted';
+  updateNotifBtn();
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) {
+    showToast('Notifications not supported on this browser');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    notifGranted = true;
+    updateNotifBtn();
+    showToast('🔔 Alerts already enabled');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    showToast('Notifications blocked — enable in browser settings');
+    return;
+  }
+  const result = await Notification.requestPermission();
+  notifGranted = result === 'granted';
+  updateNotifBtn();
+  showToast(notifGranted ? '🔔 Alerts enabled!' : 'Notifications denied');
+}
+
+function updateNotifBtn() {
+  const btn = document.getElementById('notif-btn');
+  if (!btn) return;
+  btn.style.color = notifGranted ? '#22c55e' : '';
+  btn.title       = notifGranted ? 'Alerts ON' : 'Enable alerts';
+}
+
+function fireGeofenceAlert(alert) {
+  const msg = `Bus ${alert.busNumber} is ~${alert.etaMins} min away from school!`;
+
+  // 1. In-app banner
+  showGeoBanner(msg);
+
+  // 2. Browser notification
+  if (notifGranted && Notification.permission === 'granted') {
+    try {
+      const n = new Notification('🚌 SSRVM Bus Alert', {
+        body:     msg,
+        icon:     '/icon-192.png',
+        badge:    '/icon-192.png',
+        tag:      `bus-alert-${alert.busNumber}`,
+        renotify: true,
+      });
+      setTimeout(() => n.close(), 15000);
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch {}
+  }
+
+  // 3. Sound
+  try {
+    const audio = document.getElementById('alert-audio');
+    if (audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
+  } catch {}
+
+  // 4. Vibration (Android Chrome)
+  try {
+    if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 400]);
+  } catch {}
+}
+
+// ══════════════════════════════════════════════════════════
+//  BUS LIST + SSE
+// ══════════════════════════════════════════════════════════
+function startListSSE() {
+  closeSSE(listSSE);
+  listSSE = new EventSource(`/api/track-all?token=${TOKEN}`);
+
+  listSSE.onopen = () => {
+    const chip = document.getElementById('list-chip');
+    chip.textContent = '● Live';
+    chip.classList.add('live');
+  };
+
+  listSSE.onmessage = e => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'ALL') {
+        allBuses = msg.buses;
+        renderList();
+        updateStats();
+      }
+    } catch {}
+  };
+
+  listSSE.onerror = () => {
+    const chip = document.getElementById('list-chip');
+    chip.textContent = '◌ Reconnecting';
+    chip.classList.remove('live');
+    closeSSE(listSSE);
+    setTimeout(startListSSE, 4000);
+  };
+}
+
+function renderList() {
+  const q = document.getElementById('search-inp').value.toLowerCase().trim();
+  const visible = q
+    ? allBuses.filter(b =>
+        String(b.number).includes(q) ||
+        b.routeName.toLowerCase().includes(q) ||
+        b.driverName.toLowerCase().includes(q))
+    : allBuses;
+
+  document.getElementById('list-sub').textContent =
+    q ? `${visible.length} result(s)` : `${visible.length} buses available`;
+  document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+
+  if (!visible.length) {
+    document.getElementById('bus-list').innerHTML =
+      `<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🔍</div><p>No buses match "<strong>${q}</strong>"</p></div>`;
+    return;
+  }
+
+  document.getElementById('bus-list').innerHTML = visible.map(b => {
+    const spd = b.status === 'active'  ? `🟢 ${b.speed} km/h`
+              : b.status === 'stopped' ? '🟡 Stopped'
+              : '🔴 Offline';
+    return `
+    <div class="bus-card ${b.status}" onclick="openBus('${b.id}')">
+      <div class="bc-badge">
+        ${busSVG(b.status, 38)}
+        <span class="bc-num">${b.number}</span>
+      </div>
+      <div class="bc-info">
+        <div class="bc-route">${b.routeName}</div>
+        <div class="bc-driver">👤 ${b.driverName}</div>
+        <div class="bc-spd ${b.status}">${spd}</div>
+      </div>
+      <svg class="bc-arr" viewBox="0 0 24 24" width="20" height="20">
+        <path d="M8.6 16.6L13.2 12 8.6 7.4 10 6l6 6-6 6-1.4-1.4z" fill="currentColor"/>
+      </svg>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('cnt-active').textContent  = allBuses.filter(b => b.status === 'active').length;
+  document.getElementById('cnt-stopped').textContent = allBuses.filter(b => b.status === 'stopped').length;
+  document.getElementById('cnt-offline').textContent = allBuses.filter(b => b.status === 'offline').length;
+  document.getElementById('cnt-total').textContent   = allBuses.length;
+}
+
+function filterBuses() { renderList(); }
+function clearSearch()  { document.getElementById('search-inp').value = ''; renderList(); }
+
+// ══════════════════════════════════════════════════════════
+//  BUS SVG
+// ══════════════════════════════════════════════════════════
+function busSVG(status, size) {
+  const h = size || 32;
+  const w = Math.round(h * 1.9);
+  const c = status === 'active'
+    ? { body:'#16a34a', shine:'#22c55e', glass:'#bbf7d0', wheel:'#14532d', light:'#fef08a', tail:'#f97316', stripe:'#15803d' }
+    : status === 'stopped'
+    ? { body:'#ca8a04', shine:'#eab308', glass:'#fef9c3', wheel:'#713f12', light:'#fef9c3', tail:'#dc2626', stripe:'#a16207' }
+    : { body:'#b91c1c', shine:'#ef4444', glass:'#fecaca', wheel:'#450a0a', light:'#fca5a5', tail:'#6b7280', stripe:'#991b1b' };
+  return `<svg
+    width="${w}" height="${h}"
+    viewBox="0 0 96 50"
+    xmlns="http://www.w3.org/2000/svg"
+    style="display:block;overflow:visible">
+    <defs>
+      <linearGradient id="g${status}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="${c.shine}"/>
+        <stop offset="100%" stop-color="${c.body}"/>
+      </linearGradient>
+    </defs>
+    <rect x="2" y="6" width="88" height="32" rx="5" fill="url(#g${status})"/>
+    <rect x="6" y="4" width="80" height="12" rx="4" fill="${c.shine}" opacity="0.5"/>
+    <rect x="2" y="28" width="88" height="3" fill="${c.stripe}" opacity="0.6"/>
+    <rect x="78" y="6" width="12" height="32" rx="3" fill="${c.body}" opacity="0.85"/>
+    <rect x="78" y="6" width="2.5" height="32" fill="${c.stripe}" opacity="0.5"/>
+    <rect x="5" y="9" width="16" height="12" rx="2.5" fill="${c.glass}" opacity="0.85"/>
+    <polygon points="5,9 21,9 21,10 5,10" fill="white" opacity="0.4"/>
+    <rect x="25" y="10" width="14" height="10" rx="2" fill="${c.glass}" opacity="0.85"/>
+    <polygon points="25,10 39,10 39,11 25,11" fill="white" opacity="0.35"/>
+    <rect x="43" y="10" width="14" height="10" rx="2" fill="${c.glass}" opacity="0.85"/>
+    <polygon points="43,10 57,10 57,11 43,11" fill="white" opacity="0.35"/>
+    <rect x="61" y="10" width="13" height="10" rx="2" fill="${c.glass}" opacity="0.85"/>
+    <polygon points="61,10 74,10 74,11 61,11" fill="white" opacity="0.35"/>
+    <rect x="80" y="10" width="8" height="10" rx="1.5" fill="${c.glass}" opacity="0.7"/>
+    <rect x="2" y="11" width="5" height="6" rx="1.5" fill="${c.light}" opacity="0.95"/>
+    <rect x="2" y="11" width="5" height="2.5" rx="1" fill="white" opacity="0.5"/>
+    <rect x="89" y="11" width="5" height="4" rx="1" fill="${c.tail}" opacity="0.9"/>
+    <rect x="89" y="17" width="5" height="3" rx="1" fill="${c.tail}" opacity="0.55"/>
+    <rect x="24" y="27" width="40" height="9" rx="2" fill="${c.stripe}" opacity="0.55"/>
+    <text x="44" y="34" font-size="6.5" font-weight="900" text-anchor="middle" fill="white" opacity="0.9"
+          font-family="Arial Black,Arial,sans-serif" letter-spacing="0.8">SSRVM</text>
+    <circle cx="22" cy="42" r="7"   fill="#1a1a2e"/>
+    <circle cx="22" cy="42" r="4.5" fill="${c.stripe}"/>
+    <circle cx="22" cy="42" r="2.5" fill="${c.shine}"/>
+    <circle cx="22" cy="42" r="1"   fill="white" opacity="0.6"/>
+    <circle cx="72" cy="42" r="7"   fill="#1a1a2e"/>
+    <circle cx="72" cy="42" r="4.5" fill="${c.stripe}"/>
+    <circle cx="72" cy="42" r="2.5" fill="${c.shine}"/>
+    <circle cx="72" cy="42" r="1"   fill="white" opacity="0.6"/>
+    <path d="M15 36 Q22 30 29 36" fill="none" stroke="${c.shine}" stroke-width="1.5" opacity="0.35"/>
+    <path d="M65 36 Q72 30 79 36" fill="none" stroke="${c.shine}" stroke-width="1.5" opacity="0.35"/>
+    <rect x="18" y="4" width="52" height="2" rx="1" fill="${c.shine}" opacity="0.8"/>
+  </svg>`;
+}
+
+function busMarkerHTML(status, heading) {
+  const colors = {
+    active:  { ring:'#22c55e', glow:'rgba(34,197,94,0.3)'  },
+    stopped: { ring:'#eab308', glow:'rgba(234,179,8,0.3)'  },
+    offline: { ring:'#ef4444', glow:'rgba(239,68,68,0.3)'  },
+  };
+  const col  = colors[status] || colors.offline;
+  const anim = status === 'active'
+    ? 'bus-ring-anim 2s ease-out infinite'
+    : 'none';
+  return `<div class="bus-mk-wrap">
+    <div class="bus-mk-ring" style="
+      border-color : ${col.ring};
+      box-shadow   : 0 0 0 0 ${col.glow};
+      animation    : ${anim};
+    "></div>
+    <div class="bus-mk-inner"
+         style="transform:rotate(${heading || 0}deg)">
+      ${busSVG(status, 36)}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  OPEN BUS
+// ══════════════════════════════════════════════════════════
+function openBus(busId) {
+  const bus = allBuses.find(b => b.id === busId);
+  if (!bus) return;
+
+  currentBusId   = busId;
+  maxSpd         = 0;
+  spdHistory     = [];
+  geoDismissed   = false;
+  geoBannerShown = false;
+  trailVisible   = true;
+
+  document.getElementById('trk-title').textContent = `Bus ${bus.number}`;
+  document.getElementById('trk-sub').textContent   = bus.routeName;
+  document.getElementById('ig-num').textContent    = `Bus ${bus.number}`;
+  document.getElementById('rp-name').textContent   = bus.routeName;
+  document.getElementById('dr-name').textContent   = bus.driverName;
+  document.getElementById('dr-phone').textContent  = bus.driverPhone;
+  document.getElementById('dr-call').href          = `tel:${bus.driverPhone}`;
+
+  show('track');
+  hideGeoBanner();
+
+  document.querySelectorAll('.bstab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bpanel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.bstab').classList.add('active');
+  document.getElementById('bp-info').classList.add('active');
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      initMap(bus);
+      startTrackSSE(busId);
+      startMyLocation();
+    }, 80);
+  });
+}
+
+function goBack() {
+  closeSSE(trackSSE); trackSSE = null;
+  currentBusId = null;
+  stopMyLocation();
+  destroyMap();
+  show('list');
+}
+
+// ══════════════════════════════════════════════════════════
+//  MAP
+// ══════════════════════════════════════════════════════════
+function initMap(bus) {
+  destroyMap();
+
+  const centerLat = (bus && bus.lat) ? bus.lat : MAP_CFG.lat;
+  const centerLng = (bus && bus.lng) ? bus.lng : MAP_CFG.lng;
+
+  map = L.map('track-map', {
+    center:             [centerLat, centerLng],
+    zoom:               MAP_CFG.busZoom,
+    zoomControl:        false,
+    attributionControl: true,
+    inertia:            false,
+    zoomSnap:           0.25,
+    zoomDelta:          0.5,
+    wheelPxPerZoomLevel: 120,
+    worldCopyJump:      false,
+    maxBoundsViscosity: 1.0,
+    zoomAnimation:      true,
+    zoomAnimationThreshold: 4,
+    fadeAnimation:      true,
+    markerZoomAnimation: true,
+    preferCanvas:       false,
+    updateWhenIdle:     false,
+    updateWhenZooming:  true,
+    updateInterval:     150,
+    tap:                true,
+    tapTolerance:       15,
+    touchZoom:          'center',
+    bounceAtZoomLimits: false,
+    minZoom:            10,
+    maxZoom:            18,
+  });
+
+  map.attributionControl.setPrefix('');
+  map.doubleClickZoom.disable();
+  addSmoothZoomControls();
+
+  applyTileLayer(currentLayer);
+
+  L.marker([SCHOOL.lat, SCHOOL.lng], {
+    icon: L.divIcon({
+      className:  '',
+      html:       `<div class="school-mk"><div class="school-ico">🏫</div><div class="school-lbl">SSRVM</div></div>`,
+      iconSize:   [60, 52],
+      iconAnchor: [30, 52],
+    }),
+    zIndexOffset: 500,
+    draggable: false,
+    keyboard:  false,
+  }).addTo(map).bindPopup('<strong>SSRVM Agartala</strong><br>School Location');
+
+  busTrail = L.polyline(bus ? (bus.trail || []) : [], {
+    color:       statusColor(bus ? bus.status : 'offline'),
+    weight:      3.5,
+    opacity:     0.65,
+    dashArray:   '8 6',
+    lineCap:     'round',
+    smoothFactor: 1.5,
+  }).addTo(map);
+
+  if (bus && bus.lat) {
+    busMarker = L.marker([bus.lat, bus.lng], {
+      icon:         makeBusIcon(bus.status, bus.heading),
+      zIndexOffset: 1000,
+      draggable:    false,
+      keyboard:     false,
+      pane:         'markerPane',
+    }).addTo(map);
+    interpTgt = { lat: bus.lat, lng: bus.lng };
+    interpCur = { lat: bus.lat, lng: bus.lng };
+    runInterp();
+  }
+}
+
+function addSmoothZoomControls() {
+  const zoomControl = L.control({ position: 'bottomright' });
+  zoomControl.onAdd = function() {
+    const div = L.DomUtil.create('div', 'smooth-zoom-ctrl');
+    div.innerHTML = `
+      <button class="zoom-btn zoom-in" title="Zoom in">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="zoom-btn zoom-out" title="Zoom out">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path d="M19 13H5v-2h14v2z" fill="currentColor"/>
+        </svg>
+      </button>`;
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.disableScrollPropagation(div);
+    div.querySelector('.zoom-in').onclick = () => map.setZoom(map.getZoom() + 0.5, { animate: true, duration: 0.35 });
+    div.querySelector('.zoom-out').onclick = () => map.setZoom(map.getZoom() - 0.5, { animate: true, duration: 0.35 });
+    return div;
+  };
+  zoomControl.addTo(map);
+}
+
+function applyTileLayer(name) {
+  const t = TILES[name];
+  if (tileLayer && map) { map.removeLayer(tileLayer); }
+  tileLayer = L.tileLayer(t.url, {
+    attribution: t.attr,
+    maxZoom: 18,
+    updateWhenIdle: false,
+    updateWhenZooming: true,
+    keepBuffer: 2,
+    fadeAnimation: true,
+    detectRetina: true,
+    className: 'leaflet-smooth-tiles'
+  });
+  tileLayer.addTo(map);
+  tileLayer.setZIndex(0);
+}
+
+function setLayer(name) {
+  currentLayer = name;
+  if (map) applyTileLayer(name);
+  document.getElementById('lbtn-map').classList.toggle('active', name === 'map');
+  document.getElementById('lbtn-sat').classList.toggle('active', name === 'sat');
+  showToast(name === 'sat' ? '🛰 Satellite view' : '🗺 Map view');
+}
+
+function makeBusIcon(status, heading = 0) {
+  return L.divIcon({
+    className:   '',
+    html:        busMarkerHTML(status, heading || 0),
+    iconSize:    [68, 52],
+    iconAnchor:  [34, 26],
+    popupAnchor: [0, -28],
+  });
+}
+
+function statusColor(s) {
+  return s === 'active' ? '#22c55e' : s === 'stopped' ? '#eab308' : '#ef4444';
+}
+
+function runInterp() {
+  cancelAnimationFrame(animFr);
+  let lastFrameTime = performance.now();
+  const step = (currentTime) => {
+    if (!interpTgt || !interpCur || !busMarker || !map) {
+      animFr = requestAnimationFrame(step);
+      return;
+    }
+    const deltaTime = (currentTime - lastFrameTime) / 16.67;
+    lastFrameTime = currentTime;
+    const distLat = interpTgt.lat - interpCur.lat;
+    const distLng = interpTgt.lng - interpCur.lng;
+    const dist = Math.sqrt(distLat * distLat + distLng * distLng);
+    if (dist < 0.00001) {
+      interpCur.lat = interpTgt.lat;
+      interpCur.lng = interpTgt.lng;
+    } else {
+      const easingFactor = 0.08 * Math.min(deltaTime, 2);
+      interpCur.lat += distLat * easingFactor;
+      interpCur.lng += distLng * easingFactor;
+    }
+    busMarker.setLatLng([interpCur.lat, interpCur.lng]);
+    if (followMode) {
+      const mapCenter = map.getCenter();
+      const centerDistLat = interpCur.lat - mapCenter.lat;
+      const centerDistLng = interpCur.lng - mapCenter.lng;
+      const centerDist = Math.sqrt(centerDistLat * centerDistLat + centerDistLng * centerDistLng);
+      if (centerDist > 0.0002) {
+        const pixelDist = map.latLngToLayerPoint([interpCur.lat, interpCur.lng])
+                             .subtract(map.latLngToLayerPoint(mapCenter));
+        map.panBy([pixelDist.x * 0.15, pixelDist.y * 0.15], {
+          animate: false,
+          noMoveStart: true
+        });
+      }
+    }
+    animFr = requestAnimationFrame(step);
+  };
+  animFr = requestAnimationFrame(step);
+}
+
+function destroyMap() {
+  cancelAnimationFrame(animFr); animFr = null;
+  if (map) { map.remove(); map = null; }
+  busMarker   = null; busTrail    = null;
+  tileLayer   = null; interpTgt   = null; interpCur = null;
+  myLocMarker = null; myLocCircle = null;
+}
+
+// ══════════════════════════════════════════════════════════
+//  USER LOCATION — BLUE DOT
+// ══════════════════════════════════════════════════════════
+function startMyLocation() {
+  if (!navigator.geolocation) return;
+  myLocWatcher = navigator.geolocation.watchPosition(
+    pos => updateMyLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+    err  => {},
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+  );
+}
+
+function stopMyLocation() {
+  if (myLocWatcher !== null) {
+    navigator.geolocation.clearWatch(myLocWatcher);
+    myLocWatcher = null;
+  }
+}
+
+function updateMyLocation(lat, lng, accuracy) {
+  if (!map) return;
+  if (!myLocMarker) {
+    myLocMarker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="my-loc-dot"><div class="my-loc-inner"></div><div class="my-loc-pulse"></div></div>`,
+        iconSize:   [22, 22],
+        iconAnchor: [11, 11],
+      }),
+      zIndexOffset: 800,
+    }).addTo(map).bindPopup('📍 Your Location');
+
+    myLocCircle = L.circle([lat, lng], {
+      radius: accuracy || 50,
+      color: '#3b82f6', fillColor: '#3b82f6',
+      fillOpacity: 0.1, weight: 1.5,
+    }).addTo(map);
+  } else {
+    myLocMarker.setLatLng([lat, lng]);
+    myLocCircle.setLatLng([lat, lng]);
+    myLocCircle.setRadius(accuracy || 50);
+  }
+}
+
+function showMyLocation() {
+  if (myLocMarker) {
+    const ll = myLocMarker.getLatLng();
+    map && map.flyTo([ll.lat, ll.lng], 16, {
+      duration: 0.8,
+      easeLinearity: 0.25
+    });
+    followMode = false;
+    document.getElementById('fab-follow').classList.remove('fab-active');
+    showToast('📍 Your location');
+  } else {
+    navigator.geolocation && navigator.geolocation.getCurrentPosition(
+      pos => {
+        if (map) {
+          placeMyDot(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+          map.flyTo([pos.coords.latitude, pos.coords.longitude], 16, {
+            duration: 0.8,
+            easeLinearity: 0.25
+          });
+        }
+      },
+      () => showToast('⚠️ Location unavailable')
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  MAP CONTROLS
+// ══════════════════════════════════════════════════════════
+function toggleFollow() {
+  followMode = !followMode;
+  document.getElementById('fab-follow')
+    .classList.toggle('fab-active', followMode);
+  if (followMode && interpCur && map) {
+    map.flyTo([interpCur.lat, interpCur.lng], map.getZoom(), {
+      duration: 0.8,
+      easeLinearity: 0.25
+    });
+  }
+  showToast(followMode ? '🎯 Following bus' : '📌 Follow paused');
+}
+
+function centerSchool() {
+  if (map) {
+    map.flyTo([SCHOOL.lat, SCHOOL.lng], 16, {
+      duration: 1.0,
+      easeLinearity: 0.25
+    });
+    followMode = false;
+    document.getElementById('fab-follow').classList.remove('fab-active');
+  }
+}
+
+function toggleTrail() {
+  trailVisible = !trailVisible;
+  if (busTrail && map) {
+    trailVisible ? busTrail.addTo(map) : map.removeLayer(busTrail);
+  }
+  showToast(trailVisible ? 'Trail visible' : 'Trail hidden');
+}
+
+// ══════════════════════════════════════════════════════════
+//  TRACKING SSE
+// ══════════════════════════════════════════════════════════
+function startTrackSSE(busId) {
+  closeSSE(trackSSE);
+  trackSSE = new EventSource(`/api/track/${busId}?token=${TOKEN}`);
+
+  trackSSE.onmessage = e => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'LOC') {
+        updateTrackUI(msg.bus);
+        updateBusOnMap(msg.bus);
+        checkBusGeoAlert(msg.bus);
+      }
+    } catch {}
+  };
+
+  trackSSE.onerror = () => {
+    closeSSE(trackSSE);
+    if (currentBusId) setTimeout(() => startTrackSSE(currentBusId), 4000);
+  };
+}
+
+function updateBusOnMap(bus) {
+  if (!map) return;
+
+  if (interpTgt) {
+    interpTgt.lat = bus.lat;
+    interpTgt.lng = bus.lng;
+  } else {
+    interpTgt = { lat: bus.lat, lng: bus.lng };
+    interpCur = { lat: bus.lat, lng: bus.lng };
+    busMarker = L.marker([bus.lat, bus.lng], {
+      icon: makeBusIcon(bus.status, bus.heading),
+      zIndexOffset: 1000,
+    }).addTo(map);
+    runInterp();
+  }
+
+  busMarker?.setIcon(makeBusIcon(bus.status, bus.heading));
+
+  if (busTrail && bus.trail?.length) {
+    busTrail.setLatLngs(bus.trail);
+    busTrail.setStyle({ color: statusColor(bus.status) });
+    if (trailVisible && !map.hasLayer(busTrail)) busTrail.addTo(map);
+  }
+}
+
+function updateTrackUI(bus) {
+  const distKm = haversine(bus.lat, bus.lng, SCHOOL.lat, SCHOOL.lng);
+  const spd    = bus.speed || 0;
+  const eta    = (bus.status === 'active' && spd > 3)
+    ? Math.round((distKm / spd) * 60) : null;
+
+  document.getElementById('is-speed').textContent =
+    bus.status === 'active' ? spd : '—';
+  document.getElementById('is-speed').className =
+    'istrip-val ' + (bus.status === 'active' ? 'green-val' :
+                     bus.status === 'stopped' ? 'yellow-val' : 'red-val');
+  document.getElementById('is-eta').textContent  = eta ?? '—';
+  document.getElementById('is-dist').textContent = distKm.toFixed(1);
+  document.getElementById('is-time').textContent =
+    new Date(bus.ts).toLocaleTimeString('en-IN',
+      { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  const badge = document.getElementById('trk-badge');
+  badge.textContent = bus.status === 'active'  ? '● Moving'  :
+                      bus.status === 'stopped' ? '● Stopped' : '● Offline';
+  badge.className   = `trk-badge badge-${bus.status}`;
+
+  document.getElementById('ig-status').textContent =
+    bus.status === 'active' ? '🟢 Moving' :
+    bus.status === 'stopped' ? '🟡 Stopped' : '🔴 Offline';
+  document.getElementById('ig-speed').textContent = `${spd} km/h`;
+  document.getElementById('ig-dist').textContent  = `${distKm.toFixed(2)} km`;
+  document.getElementById('rp-pts').textContent   = `${bus.trail?.length || 0} GPS points recorded`;
+
+  if (spd > 0) {
+    spdHistory.push(spd);
+    maxSpd = Math.max(maxSpd, spd);
+    const avg = Math.round(spdHistory.reduce((a,b)=>a+b,0) / spdHistory.length);
+    document.getElementById('sp-pts').textContent = bus.trail?.length || 0;
+    document.getElementById('sp-max').textContent = maxSpd;
+    document.getElementById('sp-avg').textContent = avg;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  GEOFENCE
+// ══════════════════════════════════════════════════════════
+function checkBusGeoAlert(bus) {
+  if (geoDismissed || !bus.geofenceAlert || geoBannerShown) return;
+  geoBannerShown = true;
+  fireGeofenceAlert(bus.geofenceAlert);
+}
+
+function showGeoBanner(msg) {
+  const el = document.getElementById('geo-banner');
+  document.getElementById('geo-text').textContent = msg;
+  el.style.display = 'flex';
+  el.classList.add('geo-pulse');
+  setTimeout(() => el.classList.remove('geo-pulse'), 600);
+}
+
+function hideGeoBanner() {
+  document.getElementById('geo-banner').style.display = 'none';
+}
+
+function dismissGeo() {
+  geoDismissed = true;
+  hideGeoBanner();
+}
+
+// ══════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════
+function switchTab(btn, panel) {
+  document.querySelectorAll('.bstab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bpanel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`bp-${panel}`).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════════════════════
+function closeSSE(es) { try { es?.close(); } catch {} }
+
+function haversine(la1, lo1, la2, lo2) {
+  const R = 6371, r = Math.PI/180;
+  const dL=(la2-la1)*r, dG=(lo2-lo1)*r;
+  const a = Math.sin(dL/2)**2 + Math.cos(la1*r)*Math.cos(la2*r)*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+let toastTmr;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
