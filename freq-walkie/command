@@ -1,0 +1,53 @@
+#
+#
+#
+node server.js
+node server.js
+
+ ngrok http 5500
+
+🟢 EASIEST WAY (Still Using Railway)
+
+Railway can deploy directly from your local machine without GitHub.
+
+Step 1 — Install Railway CLI
+
+Download Node if you don’t have it, then install:
+
+npm install -g @railway/cli
+Step 2 — Login
+railway login
+
+It’ll open a browser. Click approve. Done.
+
+Step 3 — Inside Your Project Folder
+
+Open terminal in VS Code (inside your project folder):
+
+railway init
+
+Choose:
+
+Create new project
+
+Step 4 — Deploy
+railway up
+
+It uploads your project directly.
+
+No GitHub needed.
+
+Step 5 — Generate Domain
+
+In Railway dashboard:
+
+Go to your project
+
+Networking
+
+Generate domain
+
+Boom. Live backend.
+#
+#
+#

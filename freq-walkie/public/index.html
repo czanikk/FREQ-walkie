@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>FREQ — Swiss Interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ══════════════════════════════════════════════════
+       SWISS INTERNATIONAL STYLE (INTERNATIONAL TYPOGRAPHIC STYLE)
+       ══════════════════════════════════════════════════ */
+    :root {
+      --bg: #FFFFFF;
+      --fg: #000000;
+      --muted: #F2F2F2;
+      --accent: #FF3000;
+      --border-width: 4px;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TEXTURES */
+    .swiss-grid-pattern {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    }
+    .swiss-dots {
+      background-image: radial-gradient(rgba(0,0,0,0.08) 2px, transparent 2px);
+      background-size: 16px 16px;
+    }
+
+    /* TYPOGRAPHY */
+    h1, h2, h3, .label {
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .title-massive {
+      font-size: clamp(3rem, 8vw, 8rem);
+      line-height: 0.85;
+      letter-spacing: -0.05em;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .section-number {
+      color: var(--accent);
+      font-size: 1.2rem;
+    }
+
+    /* LAYOUT */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    @media (min-width: 1024px) {
+      .app-container { flex-direction: row; }
+      .sidebar { width: 35%; border-right: var(--border-width) solid var(--fg); }
+      .main-area { width: 65%; display: flex; flex-direction: column; }
+    }
+
+    .sidebar {
+      background: var(--muted);
+      display: flex;
+      flex-direction: column;
+      border-bottom: var(--border-width) solid var(--fg);
+    }
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* BLOCKS */
+    .block {
+      padding: 32px;
+      border-bottom: var(--border-width) solid var(--fg);
+      position: relative;
+    }
+    .block:last-child { border-bottom: none; }
+    
+    .header-block {
+      background: var(--bg);
+      padding: 48px 32px;
+    }
+
+    /* UI ELEMENTS */
+    input[type="text"] {
+      width: 100%;
+      border: var(--border-width) solid var(--fg);
+      background: var(--bg);
+      padding: 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+    input[type="text"]::placeholder {
+      color: #999;
+    }
+
+    button {
+      width: 100%;
+      background: var(--fg);
+      color: var(--bg);
+      border: none;
+      padding: 20px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 900;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0s, color 0s, transform 0.1s ease-out;
+    }
+    button:hover {
+      background: var(--accent);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    button.secondary {
+      background: var(--bg);
+      color: var(--fg);
+      border: var(--border-width) solid var(--fg);
+    }
+    button.secondary:hover {
+      background: var(--fg);
+      color: var(--bg);
+    }
+    button.danger-hover:hover {
+      background: var(--accent) !important;
+      color: var(--bg) !important;
+      border-color: var(--accent) !important;
+    }
+
+    /* CHAT */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+      position: relative;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+    }
+    .msg-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .msg-author {
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 1.1rem;
+    }
+    .msg-time {
+      color: #666;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .msg-text {
+      font-size: 1.2rem;
+      font-weight: 400;
+      line-height: 1.4;
+      max-width: 80%;
+    }
+
+    .chat-input-row {
+      display: flex;
+      border-top: var(--border-width) solid var(--fg);
+    }
+    .chat-input-row input {
+      border: none;
+      border-right: var(--border-width) solid var(--fg);
+      text-transform: none; /* Chat can be normal case */
+      font-weight: 500;
+    }
+    .chat-input-row button {
+      width: 120px;
+    }
+
+    /* VOICE PARTICIPANTS */
+    .peers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 16px;
+    }
+    .peer-card {
+      border: var(--border-width) solid var(--fg);
+      background: var(--bg);
+      padding: 16px;
+      text-align: center;
+      transition: all 0.1s;
+    }
+    .peer-card.speaking {
+      background: var(--fg);
+      color: var(--bg);
+      border-color: var(--fg);
+    }
+    .peer-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 0; /* Strict rectangle */
+      border: 2px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin: 0 auto 12px auto;
+    }
+    .peer-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* UTILITIES */
+    .hidden { display: none !important; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: var(--fg);
+      color: var(--bg);
+      font-size: 0.8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .status-badge.error { background: var(--accent); }
+    .status-badge.ok { background: var(--fg); }
+
+  </style>
+</head>
+<body class="swiss-noise">
+
+  <div class="app-container">
+    
+    <!-- LEFT COLUMN: CONTROL & IDENTITY -->
+    <div class="sidebar swiss-grid-pattern">
+      <div class="block header-block">
+        <h1 class="title-massive">FREQ</h1>
+        <p style="margin-top: 16px; font-weight: 500; font-size: 1.2rem; max-width: 300px;">
+          OBJECTIVE PEER-TO-PEER COMMUNICATION SYSTEM.
+        </p>
+      </div>
+
+      <div class="block">
+        <h2 class="section-title"><span class="section-number">01.</span> IDENTITY</h2>
+        <div style="margin-bottom: 12px; font-weight: 500;">ENTER CALLSIGN:</div>
+        <input type="text" id="usernameInput" placeholder="ANONYMOUS" maxlength="12" style="margin-bottom: 16px;">
+        <button id="saveIdentityBtn">SAVE IDENTITY</button>
+      </div>
+
+      <div class="block swiss-dots">
+        <h2 class="section-title"><span class="section-number">02.</span> FREQUENCY</h2>
+        <div style="margin-bottom: 12px; font-weight: 500;">ENTER FREQUENCY CODE:</div>
+        <input type="text" id="channelInput" placeholder="e.g. ALPHA9" maxlength="10" style="margin-bottom: 16px;">
+        <button id="joinBtn">CONNECT TO FREQUENCY</button>
+        
+        <div id="activeChannelPanel" class="hidden" style="margin-top: 24px;">
+          <div style="border: 2px solid var(--fg); padding: 16px; background: var(--bg); margin-bottom: 16px;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #666; margin-bottom: 4px;">ACTIVE FREQUENCY</div>
+            <div id="activeChannelDisplay" style="font-size: 2rem; font-weight: 900;">ALPHA9</div>
+          </div>
+          <button id="leaveBtn" class="secondary danger-hover">DISCONNECT</button>
+        </div>
+      </div>
+      
+      <div class="block" style="flex: 1;">
+        <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px;">SYSTEM STATUS</div>
+        <div id="wsStatus" class="status-badge error">DISCONNECTED</div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: CHAT & VOICE -->
+    <div class="main-area">
+      
+      <!-- VOICE SECTION -->
+      <div class="block" style="background: var(--bg);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
+          <h2 class="section-title" style="margin: 0;"><span class="section-number">03.</span> PARTICIPANTS</h2>
+          <div style="display: flex; gap: 12px;">
+            <button id="muteBtn" class="secondary" style="width: auto; padding: 12px 24px;">MIC ON</button>
+            <button id="deafenBtn" class="secondary" style="width: auto; padding: 12px 24px;">AUDIO ON</button>
+          </div>
+        </div>
+        
+        <div class="peers-grid" id="peerList">
+          <div style="grid-column: 1/-1; padding: 32px; text-align: center; color: #666; font-weight: 500; border: 2px dashed #CCC;">
+            NO ACTIVE CONNECTION. JOIN A FREQUENCY.
+          </div>
+        </div>
+      </div>
+
+      <!-- TEXT CHAT SECTION -->
+      <div class="chat-container">
+        <div class="block" style="padding-bottom: 0; border-bottom: none;">
+          <h2 class="section-title"><span class="section-number">04.</span> TRANSMISSIONS</h2>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+          <div style="margin: auto; color: #999; font-weight: 500; font-size: 1.2rem; text-align: center;">
+            AWAITING TRANSMISSIONS...
+          </div>
+        </div>
+        
+        <div class="chat-input-row hidden" id="chatInputArea">
+          <input type="text" id="chatInput" placeholder="ENTER MESSAGE..." autocomplete="off">
+          <button id="sendChatBtn">SEND</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="audioContainer" class="hidden"></div>
+
+  <script>
+    /* ══════════════════════════════════════════════════
+       APPLICATION LOGIC
+       ══════════════════════════════════════════════════ */
+    const el = (id) => document.getElementById(id);
+    
+    let username = '';
+    let myId = '';
+    let currentChannel = null;
+    let ws = null;
+    
+    // WebRTC
+    let localStream = null;
+    let peerConnections = {}; 
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    let isMuted = false;
+    let isDeafened = false;
+
+    // Initialization
+    function init() {
+      // Load Identity
+      const saved = localStorage.getItem('freq_identity');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          username = parsed.username || '';
+          myId = parsed.id || 'user_' + Math.random().toString(36).substr(2, 9);
+        } catch(e) {}
+      } else {
+        myId = 'user_' + Math.random().toString(36).substr(2, 9);
+      }
+      
+      el('usernameInput').value = username;
+      
+      setupAudio();
+      connectWebSocket();
+    }
+
+    el('saveIdentityBtn').addEventListener('click', () => {
+      const val = el('usernameInput').value.trim().toUpperCase();
+      if (!val) {
+        alert('CALLSIGN CANNOT BE EMPTY.');
+        return;
+      }
+      username = val;
+      localStorage.setItem('freq_identity', JSON.stringify({ username, id: myId }));
+      
+      const btn = el('saveIdentityBtn');
+      btn.textContent = 'SAVED';
+      btn.style.background = 'var(--fg)';
+      setTimeout(() => { btn.textContent = 'SAVE IDENTITY'; }, 2000);
+    });
+
+    async function setupAudio() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      } catch (e) {
+        console.warn("Microphone access denied:", e);
+      }
+    }
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}`);
+      
+      ws.onopen = () => { 
+        const badge = el('wsStatus');
+        badge.textContent = 'SYSTEM ONLINE';
+        badge.className = 'status-badge ok';
+      };
+      
+      ws.onclose = () => { 
+        const badge = el('wsStatus');
+        badge.textContent = 'SYSTEM OFFLINE';
+        badge.className = 'status-badge error';
+        setTimeout(connectWebSocket, 3000); 
+      };
+      
+      ws.onmessage = async (e) => {
+        const msg = JSON.parse(e.data);
+        switch(msg.type) {
+          case 'pong': break;
+          case 'joined':
+            renderPeers(msg.existingPeers);
+            msg.existingPeers.forEach(pid => createPeerConnection(pid, true));
+            break;
+          case 'peer-joined':
+            addPeer(msg.peerId);
+            break;
+          case 'peer-left':
+            removePeer(msg.peerId);
+            break;
+          case 'chat':
+            appendMessage(msg.fromId, msg.text, msg.timestamp);
+            break;
+          case 'offer':
+            await handleOffer(msg.fromId, msg.sdp);
+            break;
+          case 'answer':
+            await handleAnswer(msg.fromId, msg.sdp);
+            break;
+          case 'candidate':
+            await handleCandidate(msg.fromId, msg.candidate);
+            break;
+          case 'error':
+            alert('SYSTEM ERROR: ' + msg.message);
+            if (msg.message.includes('kicked') || msg.message.includes('closed')) {
+              leaveChannel();
+            }
+            break;
+        }
+      };
+
+      setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
+      }, 10000);
+    }
+
+    // --- CHANNEL LOGIC ---
+    el('joinBtn').addEventListener('click', () => {
+      const freq = el('channelInput').value.trim().toUpperCase();
+      if (!freq) return;
+      if (!username) {
+        alert('PLEASE SET CALLSIGN (IDENTITY) FIRST.');
+        el('usernameInput').focus();
+        return;
+      }
+      joinChannel(freq);
+    });
+
+    el('leaveBtn').addEventListener('click', leaveChannel);
+
+    function joinChannel(freq) {
+      if (currentChannel === freq) return;
+      if (currentChannel) leaveChannel();
+      
+      currentChannel = freq;
+      el('channelInput').style.display = 'none';
+      el('joinBtn').style.display = 'none';
+      el('activeChannelPanel').classList.remove('hidden');
+      el('activeChannelDisplay').textContent = freq;
+      
+      el('chatInputArea').classList.remove('hidden');
+      el('chatMessages').innerHTML = ''; // clear chat
+      
+      el('peerList').innerHTML = ''; // clear peers
+      
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'join', frequency: freq, peerId: `${username}___${myId}` }));
+      }
+      
+      // Add self
+      addPeer(`${username}___${myId}`, true);
+    }
+
+    function leaveChannel() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'leave' }));
+      }
+      currentChannel = null;
+      
+      el('channelInput').style.display = '';
+      el('channelInput').value = '';
+      el('joinBtn').style.display = '';
+      el('activeChannelPanel').classList.add('hidden');
+      
+      el('chatInputArea').classList.add('hidden');
+      el('chatMessages').innerHTML = '<div style="margin: auto; color: #999; font-weight: 500; font-size: 1.2rem; text-align: center;">AWAITING TRANSMISSIONS...</div>';
+      
+      el('peerList').innerHTML = '<div style="grid-column: 1/-1; padding: 32px; text-align: center; color: #666; font-weight: 500; border: 2px dashed #CCC;">NO ACTIVE CONNECTION. JOIN A FREQUENCY.</div>';
+      
+      Object.values(peerConnections).forEach(pc => pc.close());
+      peerConnections = {};
+      el('audioContainer').innerHTML = '';
+    }
+
+    // --- TEXT CHAT ---
+    function sendChat() {
+      const text = el('chatInput').value.trim();
+      if (!text || !currentChannel) return;
+      
+      ws.send(JSON.stringify({ type: 'chat', text }));
+      appendMessage(`${username}___${myId}`, text, Date.now());
+      el('chatInput').value = '';
+    }
+    el('sendChatBtn').addEventListener('click', sendChat);
+    el('chatInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendChat();
+    });
+
+    function appendMessage(fullId, text, timestamp) {
+      const name = fullId.split('___')[0];
+      const d = new Date(timestamp);
+      const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+      
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'message';
+      msgDiv.innerHTML = `
+        <div class="msg-header">
+          <span class="msg-author">${name}</span>
+          <span class="msg-time">${timeStr}</span>
+        </div>
+        <div class="msg-text">${escapeHtml(text)}</div>
+      `;
+      el('chatMessages').appendChild(msgDiv);
+      el('chatMessages').scrollTop = el('chatMessages').scrollHeight;
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // --- PEERS UI ---
+    function renderPeers(peers) {
+      peers.forEach(pid => addPeer(pid, false));
+    }
+    
+    function addPeer(fullId, isSelf) {
+      if (el(`peer-${fullId}`)) return;
+      const name = fullId.split('___')[0];
+      const initial = name.charAt(0).toUpperCase();
+      
+      const div = document.createElement('div');
+      div.className = 'peer-card';
+      div.id = `peer-${fullId}`;
+      div.innerHTML = `
+        <div class="peer-avatar">${initial}</div>
+        <div class="peer-name">${name}${isSelf ? ' (YOU)' : ''}</div>
+      `;
+      el('peerList').appendChild(div);
+    }
+    
+    function removePeer(fullId) {
+      const div = el(`peer-${fullId}`);
+      if (div) div.remove();
+      if (peerConnections[fullId]) {
+        peerConnections[fullId].close();
+        delete peerConnections[fullId];
+      }
+      const audioEl = el(`audio-${fullId}`);
+      if (audioEl) audioEl.remove();
+    }
+
+    // --- WEBRTC LOGIC ---
+    function createPeerConnection(targetId, isInitiator) {
+      if (peerConnections[targetId]) return peerConnections[targetId];
+      
+      const pc = new RTCPeerConnection(rtcConfig);
+      peerConnections[targetId] = pc;
+      
+      if (localStream) {
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      }
+      
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          ws.send(JSON.stringify({ type: 'candidate', targetId, candidate: event.candidate }));
+        }
+      };
+      
+      pc.ontrack = (event) => {
+        let audioEl = el(`audio-${targetId}`);
+        if (!audioEl) {
+          audioEl = document.createElement('audio');
+          audioEl.id = `audio-${targetId}`;
+          audioEl.autoplay = true;
+          audioEl.muted = isDeafened;
+          el('audioContainer').appendChild(audioEl);
+        }
+        audioEl.srcObject = event.streams[0];
+      };
+      
+      if (isInitiator) {
+        pc.createOffer().then(offer => {
+          return pc.setLocalDescription(offer);
+        }).then(() => {
+          ws.send(JSON.stringify({ type: 'offer', targetId, sdp: pc.localDescription }));
+        }).catch(e => console.error(e));
+      }
+      
+      return pc;
+    }
+    
+    async function handleOffer(fromId, sdp) {
+      const pc = createPeerConnection(fromId, false);
+      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      ws.send(JSON.stringify({ type: 'answer', targetId: fromId, sdp: pc.localDescription }));
+    }
+    
+    async function handleAnswer(fromId, sdp) {
+      const pc = peerConnections[fromId];
+      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+    }
+    
+    async function handleCandidate(fromId, candidate) {
+      const pc = peerConnections[fromId];
+      if (pc) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+
+    // --- MEDIA CONTROLS ---
+    el('muteBtn').addEventListener('click', () => {
+      isMuted = !isMuted;
+      if (localStream) {
+        localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      }
+      const btn = el('muteBtn');
+      btn.textContent = isMuted ? 'MIC OFF' : 'MIC ON';
+      if (isMuted) {
+        btn.classList.remove('secondary');
+        btn.classList.add('danger-hover');
+        btn.style.background = 'var(--accent)';
+        btn.style.color = 'var(--bg)';
+        btn.style.borderColor = 'var(--accent)';
+      } else {
+        btn.classList.add('secondary');
+        btn.classList.remove('danger-hover');
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }
+    });
+
+    el('deafenBtn').addEventListener('click', () => {
+      isDeafened = !isDeafened;
+      document.querySelectorAll('#audioContainer audio').forEach(a => a.muted = isDeafened);
+      const btn = el('deafenBtn');
+      btn.textContent = isDeafened ? 'AUDIO OFF' : 'AUDIO ON';
+      if (isDeafened) {
+        btn.classList.remove('secondary');
+        btn.classList.add('danger-hover');
+        btn.style.background = 'var(--accent)';
+        btn.style.color = 'var(--bg)';
+        btn.style.borderColor = 'var(--accent)';
+      } else {
+        btn.classList.add('secondary');
+        btn.classList.remove('danger-hover');
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }
+    });
+
+    // START
+    window.onload = init;
+  </script>
+</body>
+</html>
