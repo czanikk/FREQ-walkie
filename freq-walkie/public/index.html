@@ -92,15 +92,21 @@
 
     /* BLOCKS */
     .block {
-      padding: 32px;
+      padding: 16px;
       border-bottom: var(--border-width) solid var(--fg);
       position: relative;
+    }
+    @media (min-width: 768px) {
+      .block { padding: 32px; }
     }
     .block:last-child { border-bottom: none; }
     
     .header-block {
       background: var(--bg);
-      padding: 48px 32px;
+      padding: 32px 16px;
+    }
+    @media (min-width: 768px) {
+      .header-block { padding: 48px 32px; }
     }
 
     /* UI ELEMENTS */
@@ -206,13 +212,53 @@
       border-top: var(--border-width) solid var(--fg);
     }
     .chat-input-row input {
+      flex: 1;
+      min-width: 0;
       border: none;
       border-right: var(--border-width) solid var(--fg);
       text-transform: none; /* Chat can be normal case */
       font-weight: 500;
     }
     .chat-input-row button {
-      width: 120px;
+      width: auto;
+      padding-left: 20px;
+      padding-right: 20px;
+      flex-shrink: 0;
+    }
+
+    /* SAVED CHANNELS */
+    .saved-channels-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .saved-badge {
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 2px solid var(--fg);
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 900;
+      transition: all 0.1s;
+    }
+    .saved-badge:hover {
+      background: var(--fg);
+      color: var(--bg);
+    }
+    .saved-badge .del-btn {
+      margin-left: 12px;
+      color: var(--accent);
+      font-size: 1.1rem;
+      font-weight: 900;
+      border: none;
+      background: transparent;
+      padding: 0;
+      width: auto;
+      text-transform: uppercase;
+      line-height: 1;
+      cursor: pointer;
     }
 
     /* VOICE PARTICIPANTS */
@@ -296,11 +342,19 @@
         <input type="text" id="channelInput" placeholder="e.g. ALPHA9" maxlength="10" style="margin-bottom: 16px;">
         <button id="joinBtn">CONNECT TO FREQUENCY</button>
         
+        <div id="savedChannelsArea" style="margin-top: 24px;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: #666;">SAVED FREQUENCIES</div>
+          <div class="saved-channels-list" id="savedChannelsList">
+            <!-- Badges go here -->
+          </div>
+        </div>
+
         <div id="activeChannelPanel" class="hidden" style="margin-top: 24px;">
           <div style="border: 2px solid var(--fg); padding: 16px; background: var(--bg); margin-bottom: 16px;">
             <div style="font-size: 0.8rem; font-weight: 700; color: #666; margin-bottom: 4px;">ACTIVE FREQUENCY</div>
             <div id="activeChannelDisplay" style="font-size: 2rem; font-weight: 900;">ALPHA9</div>
           </div>
+          <button id="saveFreqBtn" style="margin-bottom: 12px;">SAVE TO FAVORITES</button>
           <button id="leaveBtn" class="secondary danger-hover">DISCONNECT</button>
         </div>
       </div>
@@ -364,6 +418,7 @@
     let myId = '';
     let currentChannel = null;
     let ws = null;
+    let savedFrequencies = [];
     
     // WebRTC
     let localStream = null;
@@ -388,6 +443,12 @@
       
       el('usernameInput').value = username;
       
+      const savedFreqs = localStorage.getItem('freq_saved_channels');
+      if (savedFreqs) {
+        try { savedFrequencies = JSON.parse(savedFreqs); } catch(e){}
+      }
+      renderSavedChannels();
+
       setupAudio();
       connectWebSocket();
     }
@@ -486,6 +547,54 @@
 
     el('leaveBtn').addEventListener('click', leaveChannel);
 
+    el('saveFreqBtn').addEventListener('click', () => {
+      if (currentChannel && !savedFrequencies.includes(currentChannel)) {
+        savedFrequencies.push(currentChannel);
+        localStorage.setItem('freq_saved_channels', JSON.stringify(savedFrequencies));
+        renderSavedChannels();
+        el('saveFreqBtn').classList.add('hidden');
+      }
+    });
+
+    function renderSavedChannels() {
+      const container = el('savedChannelsList');
+      if (savedFrequencies.length === 0) {
+        container.innerHTML = '<div style="color:#999; font-style:italic;">NO SAVED FREQUENCIES</div>';
+        return;
+      }
+      container.innerHTML = '';
+      savedFrequencies.forEach(freq => {
+        const badge = document.createElement('div');
+        badge.className = 'saved-badge';
+        
+        const span = document.createElement('span');
+        span.textContent = freq;
+        span.style.flex = '1';
+        span.onclick = () => {
+          if (!username) {
+            alert('PLEASE SET CALLSIGN (IDENTITY) FIRST.');
+            el('usernameInput').focus();
+            return;
+          }
+          joinChannel(freq);
+        };
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del-btn';
+        delBtn.textContent = 'X';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          savedFrequencies = savedFrequencies.filter(f => f !== freq);
+          localStorage.setItem('freq_saved_channels', JSON.stringify(savedFrequencies));
+          renderSavedChannels();
+        };
+        
+        badge.appendChild(span);
+        badge.appendChild(delBtn);
+        container.appendChild(badge);
+      });
+    }
+
     function joinChannel(freq) {
       if (currentChannel === freq) return;
       if (currentChannel) leaveChannel();
@@ -493,9 +602,16 @@
       currentChannel = freq;
       el('channelInput').style.display = 'none';
       el('joinBtn').style.display = 'none';
+      el('savedChannelsArea').classList.add('hidden');
       el('activeChannelPanel').classList.remove('hidden');
       el('activeChannelDisplay').textContent = freq;
       
+      if (savedFrequencies.includes(freq)) {
+        el('saveFreqBtn').classList.add('hidden');
+      } else {
+        el('saveFreqBtn').classList.remove('hidden');
+      }
+
       el('chatInputArea').classList.remove('hidden');
       el('chatMessages').innerHTML = ''; // clear chat
       
@@ -518,6 +634,7 @@
       el('channelInput').style.display = '';
       el('channelInput').value = '';
       el('joinBtn').style.display = '';
+      el('savedChannelsArea').classList.remove('hidden');
       el('activeChannelPanel').classList.add('hidden');
       
       el('chatInputArea').classList.add('hidden');
